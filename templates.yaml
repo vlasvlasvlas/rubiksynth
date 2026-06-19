@@ -48,7 +48,7 @@ templates:
       oscillatorType: "sine"
       baseOctave: 5
       subdivision: "4n"
-      scaleOverride: null
+      scaleOverride: "pentatonic"
       attack: 0.5
       decay: 0.2
       sustain: 1.0
@@ -66,7 +66,7 @@ templates:
       oscillatorType: "sine"
       baseOctave: 4
       subdivision: "4n"
-      scaleOverride: "wholetone"
+      scaleOverride: "pentatonic"
       attack: 0.1
       decay: 0.3
       sustain: 0.4
@@ -106,7 +106,7 @@ templates:
       oscillatorType: "sine"
       baseOctave: 4
       subdivision: "8n"
-      scaleOverride: "major"
+      scaleOverride: "pentatonic"
       attack: 0.02
       decay: 1.0
       sustain: 0.2
@@ -127,7 +127,7 @@ templates:
       oscillatorType: "square"
       baseOctave: 3
       subdivision: "8n"
-      scaleOverride: "minor"
+      scaleOverride: "pentatonic"
       attack: 0.01
       decay: 0.08
       sustain: 0.15
@@ -145,7 +145,7 @@ templates:
       oscillatorType: "sawtooth"
       baseOctave: 3
       subdivision: "16n"
-      scaleOverride: "minor"
+      scaleOverride: "pentatonic"
       attack: 0.01
       decay: 0.4
       sustain: 0.5
@@ -165,7 +165,7 @@ templates:
       oscillatorType: "sawtooth"
       baseOctave: 3
       subdivision: "16n"
-      scaleOverride: "minor"
+      scaleOverride: "pentatonic"
       attack: 0.01
       decay: 0.1
       sustain: 0.0
@@ -185,7 +185,7 @@ templates:
       oscillatorType: "sawtooth"
       baseOctave: 3
       subdivision: "4n"
-      scaleOverride: "blues"
+      scaleOverride: "pentatonic"
       attack: 0.05
       decay: 0.5
       sustain: 0.6
@@ -221,7 +221,7 @@ templates:
       oscillatorType: "sine"
       baseOctave: 4
       subdivision: "2n"
-      scaleOverride: "wholetone"
+      scaleOverride: "pentatonic"
       attack: 1.2
       decay: 2.0
       sustain: 0.6
