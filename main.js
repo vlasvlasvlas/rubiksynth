@@ -12,7 +12,7 @@ import {
 
 import {
   createAudioChain, initMasterBus, triggerNote,
-  disposeChain, getLevel, SCALES,
+  disposeChain, getLevel, SCALES, ROOT_NOTES,
 } from './modules/audio.js';
 
 import {
@@ -61,7 +61,8 @@ class CubeInstance {
       delayFeedback: Math.random() * 0.35,
       filterFreq:    800 + Math.random() * 3000,
       panning:       (Math.random() * 2 - 1) * 0.8,
-      cubeVolume:    0,   // dB
+      cubeVolume:    0,
+      rootSemitone:  0,   // 0=C, 2=D, 4=E, 5=F, 7=G, 9=A, 11=B
     };
 
     this.chain = createAudioChain(this.config);
@@ -162,9 +163,10 @@ class CubeInstance {
 
     try {
       triggerNote(this.chain, colorIdx, direction, {
-        baseOctave:  this.config.baseOctave,
-        scaleType:   this.getScale(),
-        subdivision: this.config.subdivision,
+        baseOctave:   this.config.baseOctave,
+        scaleType:    this.getScale(),
+        subdivision:  this.config.subdivision,
+        rootSemitone: this.config.rootSemitone ?? 0,
       }, time);
     } catch (e) {
       console.warn('triggerNote error:', e);
@@ -220,6 +222,11 @@ function renderCubeCard(cube) {
   const svgEl = createCubeSVG(`cube-${cube.id}`);
   cube.svgEl  = svgEl;
 
+  const badge = document.createElement('div');
+  badge.className = 'scale-badge';
+  badge.textContent = '';
+
+  card.appendChild(badge);
   card.appendChild(vuStrip);
   card.appendChild(svgEl);
 

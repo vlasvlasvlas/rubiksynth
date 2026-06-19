@@ -16,11 +16,13 @@ export const SCALES = {
 // 6 colors map to 6 scale degrees
 const COLOR_DEGREE = [0, 1, 2, 3, 4, 5];
 
-export function colorToNote(colorIdx, baseOctave = 4, scaleType = 'pentatonic') {
-  const scale   = SCALES[scaleType] || SCALES.pentatonic;
-  const degree  = COLOR_DEGREE[colorIdx % COLOR_DEGREE.length] % scale.length;
+export const ROOT_NOTES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+
+export function colorToNote(colorIdx, baseOctave = 4, scaleType = 'pentatonic', rootSemitone = 0) {
+  const scale    = SCALES[scaleType] || SCALES.pentatonic;
+  const degree   = COLOR_DEGREE[colorIdx % COLOR_DEGREE.length] % scale.length;
   const semitone = scale[degree];
-  const midi = 60 + (baseOctave - 4) * 12 + semitone;
+  const midi = 60 + (baseOctave - 4) * 12 + semitone + rootSemitone;
   return Tone.Frequency(midi, 'midi').toNote();
 }
 
@@ -85,13 +87,14 @@ function makeSynth(type, { attack, decay, sustain, release, oscillatorType, modu
 // time: Web Audio context time from Transport.scheduleRepeat callback
 export function triggerNote(chain, colorIdx, direction, config, time) {
   const {
-    baseOctave  = 4,
-    scaleType   = 'pentatonic',
-    subdivision = '4n',
+    baseOctave   = 4,
+    scaleType    = 'pentatonic',
+    subdivision  = '4n',
+    rootSemitone = 0,
   } = config;
 
   const octave = direction === 'ccw' ? Math.max(2, baseOctave - 1) : baseOctave;
-  const note   = colorToNote(colorIdx, octave, scaleType);
+  const note   = colorToNote(colorIdx, octave, scaleType, rootSemitone);
   const dur    = direction === 'double' ? '2n' : subdivision;
   const vel    = direction === 'double' ? 0.85 : 0.65 + Math.random() * 0.1;
 
