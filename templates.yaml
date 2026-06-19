@@ -1,0 +1,109 @@
+# Templates de Síntesis Legendarios
+templates:
+  - name: "Laurie Spiegel"
+    config:
+      synthType: "PluckSynth"
+      attack: 0.05
+      decay: 0.2
+      sustain: 0.1
+      release: 1.5
+      reverbWet: 0.4
+      delayTime: "4n"
+      delayFeedback: 0.3
+      filterFreq: 4000
+
+  - name: "Space Lady"
+    config:
+      synthType: "FMSynth"
+      attack: 0.1
+      decay: 0.3
+      sustain: 0.4
+      release: 0.8
+      reverbWet: 0.6
+      delayTime: "8n"
+      delayFeedback: 0.5
+      filterFreq: 2500
+
+  - name: "Vangelis Cosmos"
+    config:
+      synthType: "Synth"
+      attack: 0.8
+      decay: 1.5
+      sustain: 0.8
+      release: 3.0
+      reverbWet: 0.85
+      delayTime: "2n"
+      delayFeedback: 0.4
+      filterFreq: 1200
+
+  - name: "Moroder"
+    config:
+      synthType: "AMSynth"
+      attack: 0.01
+      decay: 0.1
+      sustain: 0.0
+      release: 0.2
+      reverbWet: 0.1
+      delayTime: "16n"
+      delayFeedback: 0.2
+      filterFreq: 5000
+
+  - name: "Kraftwerk"
+    config:
+      synthType: "Synth"
+      attack: 0.02
+      decay: 0.1
+      sustain: 0.2
+      release: 0.1
+      reverbWet: 0.05
+      delayTime: "8n"
+      delayFeedback: 0.1
+      filterFreq: 8000
+
+  - name: "Daft Punk"
+    config:
+      synthType: "FMSynth"
+      attack: 0.01
+      decay: 0.4
+      sustain: 0.5
+      release: 0.6
+      reverbWet: 0.3
+      delayTime: "8n"
+      delayFeedback: 0.2
+      filterFreq: 3000
+
+  - name: "Moog"
+    config:
+      synthType: "Synth"
+      attack: 0.05
+      decay: 0.5
+      sustain: 0.6
+      release: 1.2
+      reverbWet: 0.15
+      delayTime: "4n"
+      delayFeedback: 0.1
+      filterFreq: 1500
+
+  - name: "Theremin"
+    config:
+      synthType: "Synth"
+      attack: 0.5
+      decay: 0.2
+      sustain: 1.0
+      release: 1.5
+      reverbWet: 0.5
+      delayTime: "8n"
+      delayFeedback: 0.3
+      filterFreq: 2000
+
+  - name: "Rhodes"
+    config:
+      synthType: "AMSynth"
+      attack: 0.02
+      decay: 1.0
+      sustain: 0.2
+      release: 2.0
+      reverbWet: 0.3
+      delayTime: "4n"
+      delayFeedback: 0.2
+      filterFreq: 3000
