@@ -166,6 +166,10 @@ export function renderSidebarParams(cube, templates, onDelete, onScramble) {
     setFilterFreq(cube.chain, cfg.filterFreq);
     // Update all inputs without re-rendering
     body.querySelector('#insp-synth').value       = cfg.synthType;
+    body.querySelector('#insp-scale').value       = cfg.scaleOverride || '';
+    body.querySelector('#insp-root').value        = cfg.rootSemitone ?? 0;
+    body.querySelector('#insp-octave').value      = cfg.baseOctave ?? 4;
+    body.querySelector('#insp-subdiv').value      = cfg.subdivision ?? '4n';
     body.querySelector('#insp-a').value           = Math.round(cfg.attack * 100);
     body.querySelector('#insp-d').value           = Math.round(cfg.decay * 100);
     body.querySelector('#insp-s').value           = Math.round(cfg.sustain * 100);
@@ -175,7 +179,7 @@ export function renderSidebarParams(cube, templates, onDelete, onScramble) {
     body.querySelector('#insp-delay-fb').value    = Math.round(cfg.delayFeedback * 100);
     body.querySelector('#insp-filter').value      = cfg.filterFreq;
     body.querySelectorAll('input[type=range]').forEach(updateRangeGradient);
-    // Re-select the template (inputs above don't fire change events on the template select)
+    cube.restartScheduler();
     e.target.value = idx;
   });
 
@@ -194,6 +198,10 @@ export function renderSidebarParams(cube, templates, onDelete, onScramble) {
   body.querySelector('#insp-root').addEventListener('change', e => {
     cfg.rootSemitone = parseInt(e.target.value);
     markCustom();
+    if (cube.card) {
+      const badge = cube.card.querySelector('.scale-badge');
+      if (badge) badge.textContent = cfg.scaleOverride ? ROOT_NOTES[cfg.rootSemitone] + ' ' + cfg.scaleOverride : '';
+    }
   });
 
   // ── Synth type ────────────────────────────────────────────────────────────
