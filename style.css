@@ -228,22 +228,6 @@ select:focus { outline: none; border-color: var(--border-hi); }
   pointer-events: none; white-space: nowrap;
 }
 
-/* ─── VU METER ────────────────────────────────────────────────────── */
-.vu-strip {
-  position: absolute;
-  bottom: -5px; left: 8%; right: 8%;
-  height: 2px;
-  background: rgba(255,255,255,0.05);
-  border-radius: 1px;
-  overflow: hidden;
-}
-.vu-fill {
-  height: 100%;
-  width: 0%;
-  border-radius: 1px;
-  background: rgba(255,255,255,0.55);
-  transition: width 0.07s ease-out;
-}
 
 
 /* ─── EMPTY STATE ─────────────────────────────────────────────────── */

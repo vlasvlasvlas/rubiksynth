@@ -12,7 +12,7 @@ import {
 
 import {
   createAudioChain, initMasterBus, triggerNote,
-  disposeChain, getLevel, SCALES, ROOT_NOTES,
+  disposeChain, SCALES, ROOT_NOTES,
 } from './modules/audio.js';
 
 import {
@@ -68,9 +68,8 @@ class CubeInstance {
     this.chain = createAudioChain(this.config);
 
     // DOM refs
-    this.card    = null;
-    this.svgEl   = null;
-    this.vuFill  = null;
+    this.card  = null;
+    this.svgEl = null;
   }
 
   _randomSynth() {
@@ -210,14 +209,6 @@ function renderCubeCard(cube) {
   card.id        = `card-${cube.id}`;
   card.dataset.cubeId = cube.id;
 
-  // VU meter strip
-  const vuStrip = document.createElement('div');
-  vuStrip.className = 'vu-strip';
-  const vuFill = document.createElement('div');
-  vuFill.className = 'vu-fill';
-  vuStrip.appendChild(vuFill);
-  cube.vuFill = vuFill;
-
   // SVG net
   const svgEl = createCubeSVG(`cube-${cube.id}`);
   cube.svgEl  = svgEl;
@@ -227,7 +218,6 @@ function renderCubeCard(cube) {
   badge.textContent = '';
 
   card.appendChild(badge);
-  card.appendChild(vuStrip);
   card.appendChild(svgEl);
 
   // Grid position — interlocking layout vectors u=[4,0], v=[1,2] (in face units)
@@ -288,20 +278,6 @@ function removeCube(id) {
 function toggleEmptyState() {
   document.getElementById('empty-state').style.display =
     state.cubes.size === 0 ? 'flex' : 'none';
-}
-
-// ─── VU ANIMATION LOOP ────────────────────────────────────────────────────────
-function startVULoop() {
-  function loop() {
-    state.cubes.forEach(cube => {
-      if (cube.vuFill) {
-        const level = getLevel(cube.chain);
-        cube.vuFill.style.width = `${Math.min(100, level * 120)}%`;
-      }
-    });
-    requestAnimationFrame(loop);
-  }
-  requestAnimationFrame(loop);
 }
 
 // ─── PLAY / PAUSE ─────────────────────────────────────────────────────────────
@@ -425,7 +401,6 @@ async function init() {
 
   renderLegend(document.getElementById('legend'), state.scaleType);
   setupPanZoom();
-  startVULoop();
 
   // Play button
   document.getElementById('btn-play').addEventListener('click', togglePlay);
