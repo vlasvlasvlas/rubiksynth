@@ -214,11 +214,6 @@ function renderCubeCard(cube) {
   const svgEl = createCubeSVG(`cube-${cube.id}`);
   cube.svgEl  = svgEl;
 
-  const badge = document.createElement('div');
-  badge.className = 'scale-badge';
-  badge.textContent = '';
-
-  card.appendChild(badge);
   card.appendChild(svgEl);
 
   // Grid position — interlocking layout vectors u=[4,0], v=[1,2] (in face units)
