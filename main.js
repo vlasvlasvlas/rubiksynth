@@ -333,10 +333,14 @@ function setupPanZoom() {
   const mosaic = document.getElementById('mosaic');
   let dragging = false, startX = 0, startY = 0;
 
+  // Start smaller on mobile so cubes aren't gigantic
+  if (window.innerWidth < 768) state.scale = 0.55;
+
   function applyTransform() {
     mosaic.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.scale})`;
   }
 
+  // ── Mouse ──────────────────────────────────────────────────────────────────
   wrap.addEventListener('mousedown', e => {
     if (e.target.closest('.cube-card')) return;
     dragging = true;
@@ -344,19 +348,16 @@ function setupPanZoom() {
     startY = e.clientY - state.panY;
     wrap.style.cursor = 'grabbing';
   });
-
   window.addEventListener('mousemove', e => {
     if (!dragging) return;
     state.panX = e.clientX - startX;
     state.panY = e.clientY - startY;
     applyTransform();
   });
-
   window.addEventListener('mouseup', () => {
     dragging = false;
     wrap.style.cursor = 'grab';
   });
-
   wrap.addEventListener('wheel', e => {
     e.preventDefault();
     const delta = -e.deltaY * 0.001;
@@ -370,17 +371,54 @@ function setupPanZoom() {
     applyTransform();
   }, { passive: false });
 
+  // ── Touch (pan + pinch zoom) ───────────────────────────────────────────────
+  let touchStartX = 0, touchStartY = 0, lastPinchDist = 0;
+
+  function pinchDist(touches) {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  wrap.addEventListener('touchstart', e => {
+    if (e.touches.length === 1) {
+      if (e.target.closest('.cube-card')) return;
+      touchStartX = e.touches[0].clientX - state.panX;
+      touchStartY = e.touches[0].clientY - state.panY;
+    } else if (e.touches.length === 2) {
+      lastPinchDist = pinchDist(e.touches);
+    }
+  }, { passive: true });
+
+  wrap.addEventListener('touchmove', e => {
+    e.preventDefault();
+    if (e.touches.length === 1) {
+      state.panX = e.touches[0].clientX - touchStartX;
+      state.panY = e.touches[0].clientY - touchStartY;
+    } else if (e.touches.length === 2) {
+      const dist     = pinchDist(e.touches);
+      const oldScale = state.scale;
+      state.scale    = Math.max(0.1, Math.min(3, state.scale * (dist / lastPinchDist)));
+      lastPinchDist  = dist;
+      // Zoom toward midpoint of two fingers
+      const mx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const my = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      const rect = wrap.getBoundingClientRect();
+      const cx = mx - rect.left, cy = my - rect.top;
+      state.panX = cx - (cx - state.panX) * (state.scale / oldScale);
+      state.panY = cy - (cy - state.panY) * (state.scale / oldScale);
+    }
+    applyTransform();
+  }, { passive: false });
+
   applyTransform();
 
-  // Zoom buttons
-  const applyZoom = () => {
-    mosaic.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.scale})`;
-  };
+  // ── Zoom buttons ───────────────────────────────────────────────────────────
   document.getElementById('btn-zoom-in').addEventListener('click', () => {
-    state.scale = Math.min(3, state.scale + 0.2); applyZoom();
+    state.scale = Math.min(3, state.scale + 0.2); applyTransform();
   });
   document.getElementById('btn-zoom-out').addEventListener('click', () => {
-    state.scale = Math.max(0.1, state.scale - 0.2); applyZoom();
+    state.scale = Math.max(0.1, state.scale - 0.2); applyTransform();
   });
 }
 
