@@ -5,7 +5,7 @@ import { COLOR_CSS, COLOR_NAME } from './cube.js';
 import {
   setReverb, setDelayTime, setDelayFeedback,
   setFilterFreq, setPanning, setCubeVolume,
-  replaceSynth, updateEnvelope
+  replaceSynth, updateEnvelope, ROOT_NOTES,
 } from './audio.js';
 
 function updateRangeGradient(input) {
@@ -60,6 +60,19 @@ export function renderSidebarParams(cube, templates, onDelete, onScramble) {
       </select>
     </div>
 
+    <div class="insp-section-label" style="margin-top:14px">Secuencia</div>
+    <div class="inspector-row">
+      <span class="inspector-label">Escala</span>
+      <select id="insp-scale">
+        <option value="">(global)</option>
+        <option value="pentatonic" ${cfg.scaleOverride==='pentatonic'?'selected':''}>Pentatónica</option>
+        <option value="major"      ${cfg.scaleOverride==='major'?'selected':''}>Mayor</option>
+        <option value="minor"      ${cfg.scaleOverride==='minor'?'selected':''}>Menor</option>
+        <option value="blues"      ${cfg.scaleOverride==='blues'?'selected':''}>Blues</option>
+        <option value="wholetone"  ${cfg.scaleOverride==='wholetone'?'selected':''}>Tonos enteros</option>
+      </select>
+    </div>
+
     <div class="insp-section-label" style="margin-top:14px">Synth</div>
     <div class="inspector-row">
       <span class="inspector-label">Type</span>
@@ -72,6 +85,12 @@ export function renderSidebarParams(cube, templates, onDelete, onScramble) {
     <div class="inspector-row">
       <span class="inspector-label">Octave</span>
       <input type="number" id="insp-octave" min="2" max="6" value="${cfg.baseOctave}" style="width:60px">
+    </div>
+    <div class="inspector-row">
+      <span class="inspector-label">Raíz</span>
+      <select id="insp-root">
+        ${ROOT_NOTES.map((n, i) => `<option value="${i}" ${(cfg.rootSemitone??0)===i?'selected':''}>${n}</option>`).join('')}
+      </select>
     </div>
     <div class="inspector-row">
       <span class="inspector-label">Grid</span>
@@ -158,6 +177,23 @@ export function renderSidebarParams(cube, templates, onDelete, onScramble) {
     body.querySelectorAll('input[type=range]').forEach(updateRangeGradient);
     // Re-select the template (inputs above don't fire change events on the template select)
     e.target.value = idx;
+  });
+
+  // ── Scale override ────────────────────────────────────────────────────────
+  body.querySelector('#insp-scale').addEventListener('change', e => {
+    cfg.scaleOverride = e.target.value || null;
+    markCustom();
+    // Update badge on card
+    if (cube.card) {
+      const badge = cube.card.querySelector('.scale-badge');
+      if (badge) badge.textContent = cfg.scaleOverride ? ROOT_NOTES[cfg.rootSemitone??0] + ' ' + cfg.scaleOverride : '';
+    }
+  });
+
+  // ── Root note ─────────────────────────────────────────────────────────────
+  body.querySelector('#insp-root').addEventListener('change', e => {
+    cfg.rootSemitone = parseInt(e.target.value);
+    markCustom();
   });
 
   // ── Synth type ────────────────────────────────────────────────────────────
