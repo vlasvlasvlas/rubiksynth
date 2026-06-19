@@ -195,21 +195,12 @@ export function renderSidebarParams(cube, templates, onDelete, onScramble) {
   body.querySelector('#insp-scale').addEventListener('change', e => {
     cfg.scaleOverride = e.target.value || null;
     markCustom();
-    // Update badge on card
-    if (cube.card) {
-      const badge = cube.card.querySelector('.scale-badge');
-      if (badge) badge.textContent = cfg.scaleOverride ? ROOT_NOTES[cfg.rootSemitone??0] + ' ' + cfg.scaleOverride : '';
-    }
   });
 
   // ── Root note ─────────────────────────────────────────────────────────────
   body.querySelector('#insp-root').addEventListener('change', e => {
     cfg.rootSemitone = parseInt(e.target.value);
     markCustom();
-    if (cube.card) {
-      const badge = cube.card.querySelector('.scale-badge');
-      if (badge) badge.textContent = cfg.scaleOverride ? ROOT_NOTES[cfg.rootSemitone] + ' ' + cfg.scaleOverride : '';
-    }
   });
 
   // ── Synth type ────────────────────────────────────────────────────────────
