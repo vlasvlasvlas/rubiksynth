@@ -6,8 +6,8 @@
 import {
   createSolvedState, applyMove, scramble, buildSolution,
   createCubeSVG, updateCubeSVG, flashFace,
-  getFaceIndex, getCenterColor, getCenterColors,
-  COLOR_CSS, FACE_SIZE, SVG_W, SVG_H,
+  getFaceIndex, getCenterColor,
+  COLOR_CSS, FACE_SIZE,
 } from './modules/cube.js';
 
 import {
@@ -36,38 +36,6 @@ const state = {
   autoRestart:    true,
   selectedCubeId: null,
 };
-
-// ─── 3D CUBE ANIMATION ────────────────────────────────────────────────────────
-// Appears when a cube is solved — the 6 face center colors form a 3D CSS cube
-function createSolvedCube3D(cubeState) {
-  const centers = getCenterColors(cubeState);
-  // CSS 3D face order: front=F(1), back=B(3), right=R(2), left=L(4), top=U(0), bottom=D(5)
-  const faceOrder = [
-    { cls: 'front',  color: centers[1] },
-    { cls: 'back',   color: centers[3] },
-    { cls: 'right',  color: centers[2] },
-    { cls: 'left',   color: centers[4] },
-    { cls: 'top',    color: centers[0] },
-    { cls: 'bottom', color: centers[5] },
-  ];
-
-  const wrap = document.createElement('div');
-  wrap.className = 'cube-3d-wrap';
-
-  const cube = document.createElement('div');
-  cube.className = 'cube-3d';
-
-  faceOrder.forEach(({ cls, color }) => {
-    const face = document.createElement('div');
-    face.className = `cube-face ${cls}`;
-    face.style.background = color;
-    cube.appendChild(face);
-  });
-
-  wrap.appendChild(cube);
-  cube.addEventListener('animationend', () => wrap.remove(), { once: true });
-  return wrap;
-}
 
 // ─── CUBE CLASS ───────────────────────────────────────────────────────────────
 class CubeInstance {
@@ -167,12 +135,7 @@ class CubeInstance {
     if (this.solution.length === 0) {
       this._clearSchedule();
       this.card?.classList.add('solved');
-
-      if (this.card) {
-        const anim = createSolvedCube3D(this.state);
-        this.card.appendChild(anim);
-        setTimeout(() => this.card?.classList.remove('solved'), 2200);
-      }
+      setTimeout(() => this.card?.classList.remove('solved'), 800);
 
       state.solvedCount++;
       const counterEl = document.getElementById('solved-count');

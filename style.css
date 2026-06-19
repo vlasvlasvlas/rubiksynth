@@ -236,41 +236,6 @@ select:focus { outline: none; border-color: var(--border-hi); }
   transition: width 0.07s ease-out;
 }
 
-/* ─── 3D CUBE ANIMATION (on solve) ───────────────────────────────── */
-.cube-3d-wrap {
-  position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  width: 0; height: 0;
-  perspective: 320px;
-  pointer-events: none; z-index: 20;
-}
-.cube-3d {
-  position: absolute;
-  width: 72px; height: 72px;
-  top: -36px; left: -36px;
-  transform-style: preserve-3d;
-  animation: cube3dSpin 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-.cube-face {
-  position: absolute;
-  width: 72px; height: 72px;
-  border: 2px solid rgba(0,0,0,0.25);
-  border-radius: 5px;
-}
-.cube-face.front  { transform: translateZ(36px); }
-.cube-face.back   { transform: rotateY(180deg) translateZ(36px); }
-.cube-face.right  { transform: rotateY(90deg)  translateZ(36px); }
-.cube-face.left   { transform: rotateY(-90deg) translateZ(36px); }
-.cube-face.top    { transform: rotateX(90deg)  translateZ(36px); }
-.cube-face.bottom { transform: rotateX(-90deg) translateZ(36px); }
-
-@keyframes cube3dSpin {
-  0%   { transform: scale(0.2) rotateX(0deg) rotateY(0deg); opacity: 0; }
-  12%  { transform: scale(1)   rotateX(25deg) rotateY(25deg); opacity: 1; }
-  75%  { transform: rotateX(330deg) rotateY(375deg); opacity: 1; }
-  100% { transform: scale(0.4) rotateX(360deg) rotateY(400deg); opacity: 0; }
-}
 
 /* ─── EMPTY STATE ─────────────────────────────────────────────────── */
 #empty-state {
