@@ -63,6 +63,7 @@ class CubeInstance {
       panning:       (Math.random() * 2 - 1) * 0.8,
       cubeVolume:    0,
       rootSemitone:  0,   // 0=C, 2=D, 4=E, 5=F, 7=G, 9=A, 11=B
+      pauseAfterSolve: 1.5, // seconds of silence before next cycle
     };
 
     this.chain = createAudioChain(this.config);
@@ -142,7 +143,7 @@ class CubeInstance {
       if (counterEl) counterEl.textContent = state.solvedCount;
 
       if (state.autoRestart) {
-        const pauseMs = 1400 + Math.random() * 600;
+        const pauseMs = (this.config.pauseAfterSolve ?? 1.5) * 1000;
         setTimeout(() => {
           if (!this.paused && state.playing && this.schedulerId === null) {
             this._newCycle();
