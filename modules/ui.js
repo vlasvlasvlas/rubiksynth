@@ -73,6 +73,12 @@ export function renderSidebarParams(cube, templates, onDelete, onScramble) {
       </select>
     </div>
 
+    <div class="inspector-row">
+      <span class="inspector-label">Pausa</span>
+      <input type="range" id="insp-pause" min="0" max="10" step="0.1" value="${cfg.pauseAfterSolve ?? 1.5}">
+      <span id="insp-pause-val" style="font-size:0.72rem;font-family:'JetBrains Mono',monospace;color:var(--text-muted);min-width:28px;text-align:right">${(cfg.pauseAfterSolve ?? 1.5).toFixed(1)}s</span>
+    </div>
+
     <div class="insp-section-label" style="margin-top:14px">Synth</div>
     <div class="inspector-row">
       <span class="inspector-label">Type</span>
@@ -170,6 +176,8 @@ export function renderSidebarParams(cube, templates, onDelete, onScramble) {
     body.querySelector('#insp-root').value        = cfg.rootSemitone ?? 0;
     body.querySelector('#insp-octave').value      = cfg.baseOctave ?? 4;
     body.querySelector('#insp-subdiv').value      = cfg.subdivision ?? '4n';
+    body.querySelector('#insp-pause').value       = cfg.pauseAfterSolve ?? 1.5;
+    body.querySelector('#insp-pause-val').textContent = (cfg.pauseAfterSolve ?? 1.5).toFixed(1) + 's';
     body.querySelector('#insp-a').value           = Math.round(cfg.attack * 100);
     body.querySelector('#insp-d').value           = Math.round(cfg.decay * 100);
     body.querySelector('#insp-s').value           = Math.round(cfg.sustain * 100);
@@ -221,6 +229,14 @@ export function renderSidebarParams(cube, templates, onDelete, onScramble) {
   body.querySelector('#insp-subdiv').addEventListener('change', e => {
     cfg.subdivision = e.target.value;
     cube.restartScheduler();
+    markCustom();
+  });
+
+  // ── Pause after solve ─────────────────────────────────────────────────────
+  body.querySelector('#insp-pause').addEventListener('input', e => {
+    cfg.pauseAfterSolve = parseFloat(e.target.value);
+    body.querySelector('#insp-pause-val').textContent = cfg.pauseAfterSolve.toFixed(1) + 's';
+    updateRangeGradient(e.target);
     markCustom();
   });
 
