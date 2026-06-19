@@ -1,109 +1,236 @@
-# Templates de Síntesis Legendarios
+# RubikSynth — Sound Templates
+#
+# Each template defines the full synthesis configuration for a cube.
+# Apply any template from the cube inspector in the sidebar.
+# Add your own by following the schema below.
+#
+# SYNTH TYPES
+#   Synth       — simple oscillator (sine/triangle/square/sawtooth)
+#   FMSynth     — frequency modulation, metallic/complex timbres
+#   AMSynth     — amplitude modulation, tremolo-like timbres
+#   MonoSynth   — monophonic with portamento, good for leads
+#   PluckSynth  — Karplus-Strong string model (ignores ADSR)
+#
+# SUBDIVISION (note grid)
+#   32n 16n 8n 4n 2n
+#
+# SCALE OVERRIDE (null = use global scale)
+#   pentatonic major minor blues wholetone
+#
+# OSCILLATOR TYPES (Synth / MonoSynth only)
+#   sine triangle square sawtooth
+
 templates:
-  - name: "Laurie Spiegel"
-    config:
-      synthType: "PluckSynth"
-      attack: 0.05
-      decay: 0.2
-      sustain: 0.1
-      release: 1.5
-      reverbWet: 0.4
-      delayTime: "4n"
-      delayFeedback: 0.3
-      filterFreq: 4000
 
-  - name: "Space Lady"
-    config:
-      synthType: "FMSynth"
-      attack: 0.1
-      decay: 0.3
-      sustain: 0.4
-      release: 0.8
-      reverbWet: 0.6
-      delayTime: "8n"
-      delayFeedback: 0.5
-      filterFreq: 2500
+  # ── PADS ────────────────────────────────────────────────────────────────────
 
-  - name: "Vangelis Cosmos"
+  - name: "Vangelis"
     config:
       synthType: "Synth"
+      oscillatorType: "triangle"
+      baseOctave: 4
+      subdivision: "2n"
+      scaleOverride: "pentatonic"
       attack: 0.8
       decay: 1.5
       sustain: 0.8
       release: 3.0
+      cubeVolume: 0
       reverbWet: 0.85
       delayTime: "2n"
       delayFeedback: 0.4
       filterFreq: 1200
-
-  - name: "Moroder"
-    config:
-      synthType: "AMSynth"
-      attack: 0.01
-      decay: 0.1
-      sustain: 0.0
-      release: 0.2
-      reverbWet: 0.1
-      delayTime: "16n"
-      delayFeedback: 0.2
-      filterFreq: 5000
-
-  - name: "Kraftwerk"
-    config:
-      synthType: "Synth"
-      attack: 0.02
-      decay: 0.1
-      sustain: 0.2
-      release: 0.1
-      reverbWet: 0.05
-      delayTime: "8n"
-      delayFeedback: 0.1
-      filterFreq: 8000
-
-  - name: "Daft Punk"
-    config:
-      synthType: "FMSynth"
-      attack: 0.01
-      decay: 0.4
-      sustain: 0.5
-      release: 0.6
-      reverbWet: 0.3
-      delayTime: "8n"
-      delayFeedback: 0.2
-      filterFreq: 3000
-
-  - name: "Moog"
-    config:
-      synthType: "Synth"
-      attack: 0.05
-      decay: 0.5
-      sustain: 0.6
-      release: 1.2
-      reverbWet: 0.15
-      delayTime: "4n"
-      delayFeedback: 0.1
-      filterFreq: 1500
+      panning: 0.0
 
   - name: "Theremin"
     config:
       synthType: "Synth"
+      oscillatorType: "sine"
+      baseOctave: 5
+      subdivision: "4n"
+      scaleOverride: null
       attack: 0.5
       decay: 0.2
       sustain: 1.0
       release: 1.5
+      cubeVolume: -3
       reverbWet: 0.5
       delayTime: "8n"
       delayFeedback: 0.3
       filterFreq: 2000
+      panning: 0.0
+
+  - name: "Space Lady"
+    config:
+      synthType: "FMSynth"
+      oscillatorType: "sine"
+      baseOctave: 4
+      subdivision: "4n"
+      scaleOverride: "wholetone"
+      attack: 0.1
+      decay: 0.3
+      sustain: 0.4
+      release: 0.8
+      cubeVolume: -2
+      reverbWet: 0.6
+      delayTime: "8n"
+      delayFeedback: 0.5
+      filterFreq: 2500
+      modulationIndex: 8
+      harmonicity: 2
+      panning: 0.0
+
+  # ── PLUCKS & STRINGS ────────────────────────────────────────────────────────
+
+  - name: "Laurie Spiegel"
+    config:
+      synthType: "PluckSynth"
+      oscillatorType: "triangle"
+      baseOctave: 4
+      subdivision: "4n"
+      scaleOverride: "pentatonic"
+      attack: 0.05
+      decay: 0.2
+      sustain: 0.1
+      release: 1.5
+      cubeVolume: 0
+      reverbWet: 0.4
+      delayTime: "4n"
+      delayFeedback: 0.3
+      filterFreq: 4000
+      panning: 0.0
 
   - name: "Rhodes"
     config:
       synthType: "AMSynth"
+      oscillatorType: "sine"
+      baseOctave: 4
+      subdivision: "8n"
+      scaleOverride: "major"
       attack: 0.02
       decay: 1.0
       sustain: 0.2
       release: 2.0
+      cubeVolume: 0
       reverbWet: 0.3
       delayTime: "4n"
       delayFeedback: 0.2
       filterFreq: 3000
+      harmonicity: 3
+      panning: 0.0
+
+  # ── ELECTRONIC / RHYTHMIC ───────────────────────────────────────────────────
+
+  - name: "Kraftwerk"
+    config:
+      synthType: "Synth"
+      oscillatorType: "square"
+      baseOctave: 3
+      subdivision: "8n"
+      scaleOverride: "minor"
+      attack: 0.01
+      decay: 0.08
+      sustain: 0.15
+      release: 0.1
+      cubeVolume: -4
+      reverbWet: 0.05
+      delayTime: "8n"
+      delayFeedback: 0.1
+      filterFreq: 8000
+      panning: 0.0
+
+  - name: "Daft Punk"
+    config:
+      synthType: "FMSynth"
+      oscillatorType: "sawtooth"
+      baseOctave: 3
+      subdivision: "16n"
+      scaleOverride: "minor"
+      attack: 0.01
+      decay: 0.4
+      sustain: 0.5
+      release: 0.6
+      cubeVolume: -3
+      reverbWet: 0.3
+      delayTime: "8n"
+      delayFeedback: 0.2
+      filterFreq: 3000
+      modulationIndex: 10
+      harmonicity: 3
+      panning: 0.0
+
+  - name: "Moroder"
+    config:
+      synthType: "MonoSynth"
+      oscillatorType: "sawtooth"
+      baseOctave: 3
+      subdivision: "16n"
+      scaleOverride: "minor"
+      attack: 0.01
+      decay: 0.1
+      sustain: 0.0
+      release: 0.2
+      cubeVolume: -2
+      reverbWet: 0.1
+      delayTime: "16n"
+      delayFeedback: 0.2
+      filterFreq: 5000
+      panning: 0.0
+
+  # ── ANALOG / WARM ───────────────────────────────────────────────────────────
+
+  - name: "Moog"
+    config:
+      synthType: "MonoSynth"
+      oscillatorType: "sawtooth"
+      baseOctave: 3
+      subdivision: "4n"
+      scaleOverride: "blues"
+      attack: 0.05
+      decay: 0.5
+      sustain: 0.6
+      release: 1.2
+      cubeVolume: 0
+      reverbWet: 0.15
+      delayTime: "4n"
+      delayFeedback: 0.1
+      filterFreq: 1500
+      panning: 0.0
+
+  - name: "Glass Arp"
+    config:
+      synthType: "Synth"
+      oscillatorType: "sine"
+      baseOctave: 5
+      subdivision: "16n"
+      scaleOverride: "pentatonic"
+      attack: 0.01
+      decay: 0.15
+      sustain: 0.0
+      release: 0.4
+      cubeVolume: -2
+      reverbWet: 0.55
+      delayTime: "8n"
+      delayFeedback: 0.45
+      filterFreq: 6000
+      panning: 0.0
+
+  - name: "Ambient Wash"
+    config:
+      synthType: "FMSynth"
+      oscillatorType: "sine"
+      baseOctave: 4
+      subdivision: "2n"
+      scaleOverride: "wholetone"
+      attack: 1.2
+      decay: 2.0
+      sustain: 0.6
+      release: 4.0
+      cubeVolume: -6
+      reverbWet: 0.9
+      delayTime: "4n"
+      delayFeedback: 0.6
+      filterFreq: 800
+      modulationIndex: 3
+      harmonicity: 1.5
+      panning: 0.0

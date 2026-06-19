@@ -33,20 +33,23 @@ export function initMasterBus() {
 // ─── PER-CUBE CHAIN ───────────────────────────────────────────────────────────
 export function createAudioChain(config = {}) {
   const {
-    synthType    = 'Synth',
-    attack       = 0.02,
-    decay        = 0.1,
-    sustain      = 0.3,
-    release      = 0.5,
-    reverbWet    = 0.25,
-    delayTime    = '8n',
-    delayFeedback= 0.2,
-    filterFreq   = 2000,
-    panning      = 0,
-    cubeVolume   = 0,   // dB, 0 = unity
+    synthType      = 'Synth',
+    attack         = 0.02,
+    decay          = 0.1,
+    sustain        = 0.3,
+    release        = 0.5,
+    reverbWet      = 0.25,
+    delayTime      = '8n',
+    delayFeedback  = 0.2,
+    filterFreq     = 2000,
+    panning        = 0,
+    cubeVolume     = 0,
+    oscillatorType = 'triangle',
+    modulationIndex= 6,
+    harmonicity    = 2,
   } = config;
 
-  const synth  = makeSynth(synthType, attack, decay, sustain, release);
+  const synth  = makeSynth(synthType, { attack, decay, sustain, release, oscillatorType, modulationIndex, harmonicity });
   const vol    = new Tone.Volume(cubeVolume);
   const filter = new Tone.Filter(filterFreq, 'lowpass');
   const delay  = new Tone.FeedbackDelay(delayTime, delayFeedback);
@@ -62,19 +65,19 @@ export function createAudioChain(config = {}) {
   return { synth, vol, filter, delay, reverb, panner, meter, synthType };
 }
 
-function makeSynth(type, attack, decay, sustain, release) {
+function makeSynth(type, { attack, decay, sustain, release, oscillatorType, modulationIndex, harmonicity }) {
   const env = { attack, decay, sustain, release };
   switch (type) {
     case 'FMSynth':
-      return new Tone.FMSynth({ envelope: env, modulationIndex: 6, harmonicity: 3 });
+      return new Tone.FMSynth({ envelope: env, modulationIndex, harmonicity });
     case 'AMSynth':
-      return new Tone.AMSynth({ envelope: env, harmonicity: 2 });
+      return new Tone.AMSynth({ envelope: env, harmonicity });
     case 'MonoSynth':
-      return new Tone.MonoSynth({ envelope: env, oscillator: { type: 'sawtooth' } });
+      return new Tone.MonoSynth({ envelope: env, oscillator: { type: oscillatorType } });
     case 'PluckSynth':
       return new Tone.PluckSynth({ attackNoise: 1, dampening: 3800, resonance: 0.7 });
     default: // 'Synth'
-      return new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: env });
+      return new Tone.Synth({ oscillator: { type: oscillatorType }, envelope: env });
   }
 }
 
@@ -125,8 +128,16 @@ export function setPanning(chain, pan) {
 export function replaceSynth(chain, config) {
   chain.synth.disconnect();
   chain.synth.dispose();
-  chain.synth = makeSynth(config.synthType, config.attack, config.decay, config.sustain, config.release);
-  chain.synth.connect(chain.filter);
+  chain.synth = makeSynth(config.synthType, {
+    attack:          config.attack,
+    decay:           config.decay,
+    sustain:         config.sustain,
+    release:         config.release,
+    oscillatorType:  config.oscillatorType  ?? 'triangle',
+    modulationIndex: config.modulationIndex ?? 6,
+    harmonicity:     config.harmonicity     ?? 2,
+  });
+  chain.synth.connect(chain.vol ?? chain.filter);
   chain.synthType = config.synthType;
 }
 
