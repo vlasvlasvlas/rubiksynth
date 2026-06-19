@@ -343,16 +343,14 @@ async function togglePlay() {
   }
 
   state.playing = !state.playing;
-  const btn   = document.getElementById('btn-play');
-  const icon  = document.getElementById('play-icon');
-  const label = document.getElementById('play-label');
+  const btn  = document.getElementById('btn-play');
+  const icon = document.getElementById('play-icon');
 
   if (state.playing) {
     Tone.Transport.bpm.value = state.bpm;
     Tone.Transport.start();
     btn.classList.add('playing');
-    icon.textContent  = '⏸';
-    label.textContent = 'Pause';
+    icon.textContent = '⏸';
     state.cubes.forEach(cube => {
       cube.start();
       cube.card?.classList.add('playing');
@@ -360,8 +358,7 @@ async function togglePlay() {
   } else {
     Tone.Transport.pause();
     btn.classList.remove('playing');
-    icon.textContent  = '▶';
-    label.textContent = 'Play';
+    icon.textContent = '▶';
     state.cubes.forEach(cube => {
       cube.pause();
       cube.card?.classList.remove('playing');

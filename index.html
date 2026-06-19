@@ -28,11 +28,8 @@
       <aside id="sidebar">
 
         <div class="sidebar-section">
-          <div class="section-title">Transport</div>
-
           <button id="btn-play" class="play-btn">
             <span id="play-icon">▶</span>
-            <span id="play-label">Play</span>
           </button>
 
           <div class="control-row">
@@ -41,45 +38,41 @@
           </div>
 
           <div class="control-row">
-            <label>Volume</label>
+            <label>Vol</label>
             <input type="range" id="slider-vol" min="0" max="100" value="75">
           </div>
         </div>
 
         <div class="sidebar-section">
-          <div class="section-title">Mosaic</div>
-          <button id="btn-add" class="sidebar-btn highlight">+ Add Cube</button>
-          <button id="btn-scramble-all" class="sidebar-btn">↺ Scramble All</button>
-          <button id="btn-clear-all" class="sidebar-btn danger">✕ Clear All</button>
+          <button id="btn-add" class="sidebar-btn highlight">+ Cubo</button>
+          <button id="btn-scramble-all" class="sidebar-btn">↺ Mezclar</button>
+          <button id="btn-clear-all" class="sidebar-btn danger">✕ Limpiar</button>
 
           <div class="control-row" style="margin-top:12px">
             <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:var(--text-muted); font-size:0.82rem; font-weight:500">
               <input type="checkbox" id="check-autorestart" checked>
-              Auto-restart on solve
+              Auto-reiniciar
             </label>
           </div>
           <div class="control-row">
-            <label style="color:var(--text-muted); font-size:0.82rem">Solved</label>
+            <label style="color:var(--text-muted); font-size:0.82rem">Solucionados</label>
             <span id="solved-count" style="font-family:'JetBrains Mono',monospace; font-size:0.9rem">0</span>
           </div>
         </div>
 
         <div class="sidebar-section">
-          <div class="section-title">Scale</div>
+          <div class="section-title">Escala</div>
           <select id="select-scale" style="width:100%; margin-bottom:10px">
-            <option value="pentatonic" selected>Pentatonic</option>
-            <option value="major">Major</option>
-            <option value="minor">Minor</option>
+            <option value="pentatonic" selected>Pentatónica</option>
+            <option value="major">Mayor</option>
+            <option value="minor">Menor</option>
             <option value="blues">Blues</option>
-            <option value="wholetone">Whole Tone</option>
+            <option value="wholetone">Tonos enteros</option>
           </select>
           <div id="legend"></div>
         </div>
 
         <section id="cube-inspector" style="display:none">
-          <div class="sidebar-section" style="margin-bottom:0">
-            <div class="section-title">Cube Inspector</div>
-          </div>
           <div id="cube-inspector-body"></div>
         </section>
 
@@ -89,7 +82,6 @@
         <div id="mosaic"></div>
         <div id="empty-state">
           <div class="empty-icon">⬡</div>
-          <p>Press Play then Add Cube to start</p>
         </div>
       </main>
 
