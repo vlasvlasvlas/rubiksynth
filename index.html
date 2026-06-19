@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RubikSynth</title>
+  <meta name="description" content="Self-solving Rubik's cubes that generate music in real time">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+
+    <header id="header">
+      <div class="header-left">
+        <div class="logo">RubikSynth</div>
+      </div>
+      <div class="header-right">
+        <button id="btn-help" class="icon-btn" title="Help">?</button>
+        <button id="btn-sidebar" class="icon-btn" title="Controls">⚙</button>
+      </div>
+    </header>
+
+    <div id="main-layout">
+
+      <aside id="sidebar">
+
+        <div class="sidebar-section">
+          <div class="section-title">Transport</div>
+
+          <button id="btn-play" class="play-btn">
+            <span id="play-icon">▶</span>
+            <span id="play-label">Play</span>
+          </button>
+
+          <div class="control-row">
+            <label>BPM</label>
+            <input type="number" id="input-bpm" value="100" min="20" max="300">
+          </div>
+
+          <div class="control-row">
+            <label>Volume</label>
+            <input type="range" id="slider-vol" min="0" max="100" value="75">
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="section-title">Mosaic</div>
+          <button id="btn-add" class="sidebar-btn highlight">+ Add Cube</button>
+          <button id="btn-scramble-all" class="sidebar-btn">↺ Scramble All</button>
+          <button id="btn-clear-all" class="sidebar-btn danger">✕ Clear All</button>
+
+          <div class="control-row" style="margin-top:12px">
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:var(--text-muted); font-size:0.82rem; font-weight:500">
+              <input type="checkbox" id="check-autorestart" checked>
+              Auto-restart on solve
+            </label>
+          </div>
+          <div class="control-row">
+            <label style="color:var(--text-muted); font-size:0.82rem">Solved</label>
+            <span id="solved-count" style="font-family:'JetBrains Mono',monospace; font-size:0.9rem">0</span>
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="section-title">Scale</div>
+          <select id="select-scale" style="width:100%; margin-bottom:10px">
+            <option value="pentatonic" selected>Pentatonic</option>
+            <option value="major">Major</option>
+            <option value="minor">Minor</option>
+            <option value="blues">Blues</option>
+            <option value="wholetone">Whole Tone</option>
+          </select>
+          <div id="legend"></div>
+        </div>
+
+        <section id="cube-inspector" style="display:none">
+          <div class="sidebar-section" style="margin-bottom:0">
+            <div class="section-title">Cube Inspector</div>
+          </div>
+          <div id="cube-inspector-body"></div>
+        </section>
+
+      </aside>
+
+      <main id="mosaic-wrap">
+        <div id="mosaic"></div>
+        <div id="empty-state">
+          <div class="empty-icon">⬡</div>
+          <p>Press Play then Add Cube to start</p>
+        </div>
+      </main>
+
+      <div id="zoom-controls">
+        <button id="btn-zoom-in" title="Zoom in">+</button>
+        <button id="btn-zoom-out" title="Zoom out">−</button>
+      </div>
+
+    </div>
+
+    <div id="help-modal-overlay" class="hidden">
+      <div id="help-modal">
+        <button id="btn-close-help">✕</button>
+        <h2>RubikSynth</h2>
+        <p>An experimental instrument where self-solving Rubik's cubes generate music in real time.</p>
+        <ul>
+          <li>Each <strong>color</strong> maps to a <strong>musical note</strong> in the selected scale.</li>
+          <li>Every move triggers a sound — face direction changes the octave and duration.</li>
+          <li>Click any cube to open its synth inspector and customize sound independently.</li>
+          <li>When a cube solves, it briefly appears as a 3D object before the next cycle begins.</li>
+          <li>Drag to pan the canvas. Scroll or use +/− to zoom.</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+  <script type="module" src="main.js"></script>
+</body>
+</html>
