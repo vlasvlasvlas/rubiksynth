@@ -130,14 +130,11 @@ export function disposeRhythmSynth() {
 // ─── TRANSPORT ───────────────────────────────────────────────────────────────
 export function startRhythm() {
   stopRhythm();
-  // Derive the correct starting step from the current Transport position so that
-  // after a pause/resume the pattern continues from where it left off rather than
-  // always resetting to step 0.
-  const stepSec = Tone.Time('16n').toSeconds();
-  const pos     = Tone.Transport.seconds;
-  // The first callback fires at the next 16n grid point; pre-set currentStep so
-  // that incrementing it in the callback lands on the correct step.
-  const nextGridStep = stepSec > 0 ? Math.ceil(pos / stepSec) % 16 : 0;
+  // Derive the correct starting step from Transport ticks (BPM-independent)
+  // so that after a BPM change or pause/resume the pattern stays on the grid.
+  const ticksPerStep = Math.round(Tone.Transport.PPQ / 4); // 16n = PPQ/4 ticks
+  const currentTick  = Tone.Transport.ticks;
+  const nextGridStep = ticksPerStep > 0 ? Math.ceil(currentTick / ticksPerStep) % 16 : 0;
   rhythm.currentStep = (nextGridStep - 1 + 16) % 16;
 
   rhythm.schedulerId = Tone.Transport.scheduleRepeat((time) => {
