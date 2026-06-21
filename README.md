@@ -207,3 +207,6 @@ rubiksynth/
 - [Tone.js 14](https://tonejs.github.io/) — síntesis y scheduling de audio (CDN)
 - [js-yaml](https://github.com/nodeca/js-yaml) — carga de templates (CDN)
 - Vanilla JS (ES modules) — sin bundler, sin frameworks
+## License
+
+MIT License — © 2026 [Vladimiro Bellini](https://github.com/vlasvlasvlas). Free to use and modify, attribution required.
