@@ -47,7 +47,7 @@ const state = {
   autoRestart:    true,
   selectedCubeId: null,
   mixerOpen:      false,
-  soloedCubeId:   null,
+  soloedIds:      new Set(),
   rhythmMuted:    false,
 };
 
@@ -259,6 +259,16 @@ function renderCubeCard(cube) {
       const c = state.cubes.get(id);
       if (c) c.triggerScramble();
     });
+    // Reverse link: highlight this cube's channel in the mixer
+    if (state.mixerOpen) {
+      const ch = document.querySelector(`#mixer-channels [data-cube-id="${cube.id}"]`);
+      if (ch) {
+        document.querySelectorAll('.mixer-channel.mixer-ch-pulse').forEach(el => el.classList.remove('mixer-ch-pulse'));
+        ch.classList.add('mixer-ch-pulse');
+        ch.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        setTimeout(() => ch.classList.remove('mixer-ch-pulse'), 900);
+      }
+    }
   });
 
   cube.card = card;
@@ -283,10 +293,11 @@ function renderMixer() {
     const hue     = (cube.id * 67) % 360;
     const abbr    = SYNTH_ABBR[cube.config.synthType] || cube.config.synthType;
     const isMuted = cube._muted;
-    const isSolo  = state.soloedCubeId === cube.id;
+    const isSolo  = state.soloedIds.has(cube.id);
 
     const ch = document.createElement('div');
     ch.className = 'mixer-channel';
+    ch.dataset.cubeId = cube.id;
     ch.innerHTML = `
       <div class="mixer-ch-top">
         <div class="mixer-dot" style="background:hsl(${hue},60%,55%)" title="Ir al cubo"></div>
@@ -358,21 +369,22 @@ function focusCubeOnCanvas(cube) {
 }
 
 function toggleCubeMute(cube) {
-  if (state.soloedCubeId !== null) return;
+  if (state.soloedIds.size > 0) return;
   cube._muted = !cube._muted;
   cube.chain.vol.mute = cube._muted;
 }
 
 function toggleCubeSolo(cubeId) {
-  if (state.soloedCubeId === cubeId) {
-    state.soloedCubeId = null;
-    state.cubes.forEach(c => { c.chain.vol.mute = c._muted; });
-    setRhythmMute(state.rhythmMuted);
+  if (state.soloedIds.has(cubeId)) {
+    state.soloedIds.delete(cubeId);
   } else {
-    state.soloedCubeId = cubeId;
-    state.cubes.forEach(c => { c.chain.vol.mute = (c.id !== cubeId); });
-    setRhythmMute(true);
+    state.soloedIds.add(cubeId);
   }
+  const anySoloed = state.soloedIds.size > 0;
+  state.cubes.forEach(c => {
+    c.chain.vol.mute = anySoloed ? !state.soloedIds.has(c.id) : c._muted;
+  });
+  setRhythmMute(anySoloed || state.rhythmMuted);
 }
 
 function addCube() {
@@ -401,11 +413,14 @@ function removeCube(id) {
   const cube = state.cubes.get(id);
   if (!cube) return;
 
-  // If this cube was soloed, clear solo before disposing
-  if (state.soloedCubeId === id) {
-    state.soloedCubeId = null;
-    state.cubes.forEach(c => { if (c.id !== id) c.chain.vol.mute = c._muted; });
-    setRhythmMute(state.rhythmMuted);
+  // If this cube was soloed, remove it from the set and recompute
+  if (state.soloedIds.has(id)) {
+    state.soloedIds.delete(id);
+    const anySoloed = state.soloedIds.size > 0;
+    state.cubes.forEach(c => {
+      if (c.id !== id) c.chain.vol.mute = anySoloed ? !state.soloedIds.has(c.id) : c._muted;
+    });
+    setRhythmMute(anySoloed || state.rhythmMuted);
   }
 
   cube.dispose();
