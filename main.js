@@ -12,13 +12,13 @@ import {
 
 import {
   createAudioChain, initMasterBus, triggerNote,
-  disposeChain, setDelayTime,
+  disposeChain, setDelayTime, setCubeVolume,
 } from './modules/audio.js';
 
 import {
   rhythm, startRhythm, stopRhythm, setSwing,
   loadRhythmPreset, cycleStep, TIMBRE_CLASS,
-  initRhythmSynth, setRhythmVolume, setRhythmKit, KITS,
+  initRhythmSynth, setRhythmVolume, setRhythmKit, setRhythmMute, KITS,
 } from './modules/rhythm.js';
 
 import {
@@ -46,6 +46,9 @@ const state = {
   solvedCount:    0,
   autoRestart:    true,
   selectedCubeId: null,
+  mixerOpen:      false,
+  soloedCubeId:   null,
+  rhythmMuted:    false,
 };
 
 // ─── CUBE CLASS ───────────────────────────────────────────────────────────────
@@ -77,6 +80,7 @@ class CubeInstance {
     };
 
     this.chain = createAudioChain(this.config);
+    this._muted = false;
 
     // DOM refs
     this.card  = null;
@@ -261,6 +265,116 @@ function renderCubeCard(cube) {
   return card;
 }
 
+// ─── MIXER ────────────────────────────────────────────────────────────────────
+const SYNTH_ABBR = { Synth: 'Syn', FMSynth: 'FM', AMSynth: 'AM', MonoSynth: 'Mono', PluckSynth: 'Plk' };
+
+function toggleMixer() {
+  state.mixerOpen = !state.mixerOpen;
+  document.getElementById('mixer-panel').classList.toggle('open', state.mixerOpen);
+  document.getElementById('btn-mixer').classList.toggle('mixer-active', state.mixerOpen);
+  if (state.mixerOpen) renderMixer();
+}
+
+function renderMixer() {
+  const channels = document.getElementById('mixer-channels');
+  channels.innerHTML = '';
+
+  state.cubes.forEach(cube => {
+    const hue     = (cube.id * 67) % 360;
+    const abbr    = SYNTH_ABBR[cube.config.synthType] || cube.config.synthType;
+    const isMuted = cube._muted;
+    const isSolo  = state.soloedCubeId === cube.id;
+
+    const ch = document.createElement('div');
+    ch.className = 'mixer-channel';
+    ch.innerHTML = `
+      <div class="mixer-ch-top">
+        <div class="mixer-dot" style="background:hsl(${hue},60%,55%)" title="Ir al cubo"></div>
+        <span class="mixer-name" title="Ir al cubo">C${cube.id} · ${abbr}</span>
+        <button class="mixer-btn mute ${isMuted ? 'active' : ''}" title="Mute">M</button>
+        <button class="mixer-btn solo ${isSolo  ? 'active' : ''}" title="Solo">S</button>
+      </div>
+      <input type="range" class="mixer-vol" min="-40" max="6" value="${cube.config.cubeVolume ?? 0}">
+    `;
+
+    const volSlider = ch.querySelector('.mixer-vol');
+    updateRangeGradient(volSlider);
+
+    const focusFn = () => focusCubeOnCanvas(cube);
+    ch.querySelector('.mixer-dot').addEventListener('click', focusFn);
+    ch.querySelector('.mixer-name').addEventListener('click', focusFn);
+
+    ch.querySelector('.mute').addEventListener('click', e => {
+      e.stopPropagation();
+      toggleCubeMute(cube);
+      renderMixer();
+    });
+    ch.querySelector('.solo').addEventListener('click', e => {
+      e.stopPropagation();
+      toggleCubeSolo(cube.id);
+      renderMixer();
+    });
+    volSlider.addEventListener('input', e => {
+      cube.config.cubeVolume = parseInt(e.target.value);
+      setCubeVolume(cube.chain, cube.config.cubeVolume);
+      updateRangeGradient(e.target);
+    });
+
+    channels.appendChild(ch);
+  });
+
+  // Rhythm channel
+  const rch = document.createElement('div');
+  rch.className = 'mixer-channel mixer-rhythm-sep';
+  rch.innerHTML = `
+    <div class="mixer-ch-top">
+      <div class="mixer-dot" style="background:rgba(255,200,0,0.85)"></div>
+      <span class="mixer-name" style="cursor:default">Ritmo</span>
+      <button class="mixer-btn mute ${state.rhythmMuted ? 'active' : ''}" id="mixer-r-mute" title="Mute ritmo">M</button>
+    </div>
+    <input type="range" class="mixer-vol" id="mixer-r-vol" min="-40" max="0" value="${rhythm.volume}">
+  `;
+  const rVol = rch.querySelector('#mixer-r-vol');
+  updateRangeGradient(rVol);
+  rch.querySelector('#mixer-r-mute').addEventListener('click', e => {
+    e.stopPropagation();
+    state.rhythmMuted = !state.rhythmMuted;
+    setRhythmMute(state.rhythmMuted);
+    renderMixer();
+  });
+  rVol.addEventListener('input', e => {
+    setRhythmVolume(parseInt(e.target.value));
+    updateRangeGradient(e.target);
+  });
+  channels.appendChild(rch);
+}
+
+function focusCubeOnCanvas(cube) {
+  document.querySelectorAll('.cube-card.selected').forEach(c => c.classList.remove('selected'));
+  cube.card?.classList.add('selected');
+  state.selectedCubeId = cube.id;
+  cube.card?.classList.add('mixer-focus');
+  setTimeout(() => cube.card?.classList.remove('mixer-focus'), 1000);
+}
+
+function toggleCubeMute(cube) {
+  if (state.soloedCubeId !== null) return;
+  cube._muted = !cube._muted;
+  cube.chain.vol.mute = cube._muted;
+}
+
+function toggleCubeSolo(cubeId) {
+  if (state.soloedCubeId === cubeId) {
+    state.soloedCubeId = null;
+    state.cubes.forEach(c => { c.chain.vol.mute = c._muted; });
+    setRhythmMute(state.rhythmMuted);
+  } else {
+    state.soloedCubeId = cubeId;
+    state.cubes.forEach(c => { c.chain.vol.mute = (c.id !== cubeId); });
+    setRhythmMute(true);
+  }
+}
+
 function addCube() {
   if (state.cubes.size >= 96) return;
 
@@ -279,11 +393,21 @@ function addCube() {
     cube.start();
     card.classList.add('playing');
   }
+
+  if (state.mixerOpen) renderMixer();
 }
 
 function removeCube(id) {
   const cube = state.cubes.get(id);
   if (!cube) return;
+
+  // If this cube was soloed, clear solo before disposing
+  if (state.soloedCubeId === id) {
+    state.soloedCubeId = null;
+    state.cubes.forEach(c => { if (c.id !== id) c.chain.vol.mute = c._muted; });
+    setRhythmMute(state.rhythmMuted);
+  }
+
   cube.dispose();
   state.cubes.delete(id);
   document.getElementById(`card-${id}`)?.remove();
@@ -294,6 +418,7 @@ function removeCube(id) {
   }
 
   toggleEmptyState();
+  if (state.mixerOpen) renderMixer();
 }
 
 function toggleEmptyState() {
@@ -529,6 +654,9 @@ async function init() {
   document.getElementById('check-autorestart').addEventListener('change', e => {
     state.autoRestart = e.target.checked;
   });
+
+  // Mixer panel
+  document.getElementById('btn-mixer').addEventListener('click', toggleMixer);
 
   // Help modal
   document.getElementById('btn-help').addEventListener('click', () => {
