@@ -17,6 +17,7 @@ export const rhythm = {
   schedulerId: null,
   volume:      -6,
   kit:         '808',
+  muted:       false,
 };
 
 export const TIMBRES      = ['', 'bombo', 'caja', 'hihat'];
@@ -165,6 +166,11 @@ export function setSwing(amount) {
 export function setRhythmVolume(db) {
   rhythm.volume = db;
   if (_synths?.vol) _synths.vol.volume.value = db;
+}
+
+export function setRhythmMute(muted) {
+  rhythm.muted = muted;
+  if (_synths?.vol) _synths.vol.mute = muted;
 }
 
 // ─── PRESET LOADING ───────────────────────────────────────────────────────────
