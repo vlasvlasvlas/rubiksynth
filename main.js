@@ -49,6 +49,7 @@ const state = {
   mixerOpen:      false,
   soloedIds:      new Set(),
   rhythmMuted:    false,
+  rhythmSoloed:   false,
 };
 
 // ─── CUBE CLASS ───────────────────────────────────────────────────────────────
@@ -342,6 +343,7 @@ function renderMixer() {
       <div class="mixer-dot" style="background:rgba(255,200,0,0.85)"></div>
       <span class="mixer-name" style="cursor:default">Ritmo</span>
       <button class="mixer-btn mute ${state.rhythmMuted ? 'active' : ''}" id="mixer-r-mute" title="Mute ritmo">M</button>
+      <button class="mixer-btn solo ${state.rhythmSoloed ? 'active' : ''}" id="mixer-r-solo" title="Solo ritmo">S</button>
     </div>
     <input type="range" class="mixer-vol" id="mixer-r-vol" min="-40" max="0" value="${rhythm.volume}">
   `;
@@ -350,7 +352,12 @@ function renderMixer() {
   rch.querySelector('#mixer-r-mute').addEventListener('click', e => {
     e.stopPropagation();
     state.rhythmMuted = !state.rhythmMuted;
-    setRhythmMute(state.rhythmMuted);
+    applySoloState();
+    renderMixer();
+  });
+  rch.querySelector('#mixer-r-solo').addEventListener('click', e => {
+    e.stopPropagation();
+    toggleRhythmSolo();
     renderMixer();
   });
   rVol.addEventListener('input', e => {
@@ -368,23 +375,29 @@ function focusCubeOnCanvas(cube) {
   setTimeout(() => cube.card?.classList.remove('mixer-focus'), 1000);
 }
 
+function applySoloState() {
+  const anySolo = state.soloedIds.size > 0 || state.rhythmSoloed;
+  state.cubes.forEach(c => {
+    c.chain.vol.mute = anySolo ? !state.soloedIds.has(c.id) : c._muted;
+  });
+  setRhythmMute(anySolo ? !state.rhythmSoloed : state.rhythmMuted);
+}
+
 function toggleCubeMute(cube) {
-  if (state.soloedIds.size > 0) return;
+  if (state.soloedIds.size > 0 || state.rhythmSoloed) return;
   cube._muted = !cube._muted;
   cube.chain.vol.mute = cube._muted;
 }
 
 function toggleCubeSolo(cubeId) {
-  if (state.soloedIds.has(cubeId)) {
-    state.soloedIds.delete(cubeId);
-  } else {
-    state.soloedIds.add(cubeId);
-  }
-  const anySoloed = state.soloedIds.size > 0;
-  state.cubes.forEach(c => {
-    c.chain.vol.mute = anySoloed ? !state.soloedIds.has(c.id) : c._muted;
-  });
-  setRhythmMute(anySoloed || state.rhythmMuted);
+  if (state.soloedIds.has(cubeId)) state.soloedIds.delete(cubeId);
+  else state.soloedIds.add(cubeId);
+  applySoloState();
+}
+
+function toggleRhythmSolo() {
+  state.rhythmSoloed = !state.rhythmSoloed;
+  applySoloState();
 }
 
 function addCube() {
@@ -413,18 +426,11 @@ function removeCube(id) {
   const cube = state.cubes.get(id);
   if (!cube) return;
 
-  // If this cube was soloed, remove it from the set and recompute
-  if (state.soloedIds.has(id)) {
-    state.soloedIds.delete(id);
-    const anySoloed = state.soloedIds.size > 0;
-    state.cubes.forEach(c => {
-      if (c.id !== id) c.chain.vol.mute = anySoloed ? !state.soloedIds.has(c.id) : c._muted;
-    });
-    setRhythmMute(anySoloed || state.rhythmMuted);
-  }
+  if (state.soloedIds.has(id)) state.soloedIds.delete(id);
 
   cube.dispose();
   state.cubes.delete(id);
+  applySoloState();
   document.getElementById(`card-${id}`)?.remove();
 
   if (state.selectedCubeId === id) {
