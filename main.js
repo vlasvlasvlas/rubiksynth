@@ -12,7 +12,7 @@ import {
 
 import {
   createAudioChain, initMasterBus, triggerNote,
-  disposeChain,
+  disposeChain, setDelayTime,
 } from './modules/audio.js';
 
 import {
@@ -340,7 +340,15 @@ async function togglePlay() {
 function syncBPM(val) {
   state.bpm = parseInt(val) || 100;
   document.getElementById('input-bpm').value = state.bpm;
-  if (state.playing) Tone.Transport.bpm.value = state.bpm;
+  if (state.playing) {
+    Tone.Transport.bpm.value = state.bpm;
+    // Re-apply delay times so existing FeedbackDelay nodes track the new BPM.
+    state.cubes.forEach(cube => {
+      if (cube.chain && cube.config?.delayTime) {
+        setDelayTime(cube.chain, cube.config.delayTime);
+      }
+    });
+  }
 }
 
 function syncVolume(val) {
