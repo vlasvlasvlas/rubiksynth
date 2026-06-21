@@ -169,19 +169,6 @@ export function createCubeSVG(cubeId) {
     bg.setAttribute('rx', 3);
     svg.appendChild(bg);
 
-    // Face label
-    const lbl = document.createElementNS(ns, 'text');
-    lbl.setAttribute('x', ox + FACE_SIZE / 2);
-    lbl.setAttribute('y', oy + FACE_SIZE / 2);
-    lbl.setAttribute('text-anchor', 'middle');
-    lbl.setAttribute('dominant-baseline', 'middle');
-    lbl.setAttribute('font-size', '8');
-    lbl.setAttribute('fill', 'rgba(255,255,255,0.1)');
-    lbl.setAttribute('font-family', 'JetBrains Mono, monospace');
-    lbl.setAttribute('pointer-events', 'none');
-    lbl.textContent = FACE_NAMES[f];
-    svg.appendChild(lbl);
-
     // Sticker group
     const group = document.createElementNS(ns, 'g');
     group.setAttribute('id', `${cubeId}-face-${f}`);

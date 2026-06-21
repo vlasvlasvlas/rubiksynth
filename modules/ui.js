@@ -75,8 +75,10 @@ export function renderSidebarParams(cube, templates, onDelete, onScramble) {
 
     <div class="inspector-row">
       <span class="inspector-label">Pausa</span>
-      <input type="range" id="insp-pause" min="0" max="10" step="0.1" value="${cfg.pauseAfterSolve ?? 1.5}">
-      <span id="insp-pause-val" style="font-size:0.72rem;font-family:'JetBrains Mono',monospace;color:var(--text-muted);min-width:28px;text-align:right">${(cfg.pauseAfterSolve ?? 1.5).toFixed(1)}s</span>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:0.8rem;color:var(--text-muted)">
+        <input type="checkbox" id="insp-random-pause" ${cfg.randomPause ? 'checked' : ''}>
+        aleatoria
+      </label>
     </div>
 
     <div class="insp-section-label" style="margin-top:14px">Synth</div>
@@ -160,24 +162,29 @@ export function renderSidebarParams(cube, templates, onDelete, onScramble) {
   const markCustom = () => { body.querySelector('#insp-template').value = ''; };
 
   // ── Template ─────────────────────────────────────────────────────────────
+  // Only timbre parameters are inherited from the preset.
+  // Grid/sequence parameters (subdivision, scaleOverride, baseOctave,
+  // rootSemitone, pauseAfterSolve) are intentionally preserved.
+  const TIMBRE_KEYS = [
+    'synthType','oscillatorType','modulationIndex','harmonicity',
+    'attack','decay','sustain','release',
+    'reverbWet','delayTime','delayFeedback','filterFreq',
+    'panning','cubeVolume',
+  ];
+
   body.querySelector('#insp-template').addEventListener('change', e => {
     const idx = e.target.value;
     if (idx === '') return;
     const tpl = templates[parseInt(idx, 10)].config;
-    Object.assign(cfg, tpl);
+    // Apply only timbre keys, leave sequence/grid keys untouched
+    TIMBRE_KEYS.forEach(k => { if (k in tpl) cfg[k] = tpl[k]; });
     replaceSynth(cube.chain, cfg);
     setReverb(cube.chain, cfg.reverbWet);
     setDelayFeedback(cube.chain, cfg.delayFeedback);
     setDelayTime(cube.chain, cfg.delayTime);
     setFilterFreq(cube.chain, cfg.filterFreq);
-    // Update all inputs without re-rendering
+    // Update only the timbre-related inputs
     body.querySelector('#insp-synth').value       = cfg.synthType;
-    body.querySelector('#insp-scale').value       = cfg.scaleOverride || '';
-    body.querySelector('#insp-root').value        = cfg.rootSemitone ?? 0;
-    body.querySelector('#insp-octave').value      = cfg.baseOctave ?? 4;
-    body.querySelector('#insp-subdiv').value      = cfg.subdivision ?? '4n';
-    body.querySelector('#insp-pause').value       = cfg.pauseAfterSolve ?? 1.5;
-    body.querySelector('#insp-pause-val').textContent = (cfg.pauseAfterSolve ?? 1.5).toFixed(1) + 's';
     body.querySelector('#insp-a').value           = Math.round(cfg.attack * 100);
     body.querySelector('#insp-d').value           = Math.round(cfg.decay * 100);
     body.querySelector('#insp-s').value           = Math.round(cfg.sustain * 100);
@@ -187,7 +194,6 @@ export function renderSidebarParams(cube, templates, onDelete, onScramble) {
     body.querySelector('#insp-delay-fb').value    = Math.round(cfg.delayFeedback * 100);
     body.querySelector('#insp-filter').value      = cfg.filterFreq;
     body.querySelectorAll('input[type=range]').forEach(updateRangeGradient);
-    cube.restartScheduler();
     e.target.value = idx;
   });
 
@@ -223,11 +229,9 @@ export function renderSidebarParams(cube, templates, onDelete, onScramble) {
     markCustom();
   });
 
-  // ── Pause after solve ─────────────────────────────────────────────────────
-  body.querySelector('#insp-pause').addEventListener('input', e => {
-    cfg.pauseAfterSolve = parseFloat(e.target.value);
-    body.querySelector('#insp-pause-val').textContent = cfg.pauseAfterSolve.toFixed(1) + 's';
-    updateRangeGradient(e.target);
+  // ── Random pause ──────────────────────────────────────────────────────────────
+  body.querySelector('#insp-random-pause').addEventListener('change', e => {
+    cfg.randomPause = e.target.checked;
     markCustom();
   });
 

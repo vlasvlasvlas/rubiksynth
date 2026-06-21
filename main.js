@@ -12,12 +12,22 @@ import {
 
 import {
   createAudioChain, initMasterBus, triggerNote,
-  disposeChain, SCALES, ROOT_NOTES,
+  disposeChain,
 } from './modules/audio.js';
+
+import {
+  rhythm, startRhythm, stopRhythm, setSwing,
+  loadRhythmPreset, cycleStep, TIMBRE_CLASS,
+  initRhythmSynth, setRhythmVolume, setRhythmKit, KITS,
+} from './modules/rhythm.js';
 
 import {
   renderLegend, renderSidebarParams,
 } from './modules/ui.js';
+
+// Random pause values (in bars) — always multiples of 0.5 so re-entry stays on the grid.
+// Weighted towards 1-2 bars; 0 = restart at the very next bar boundary (no silence).
+const PAUSE_OPTIONS = [0, 1, 1, 2, 2, 3];
 
 // ─── GLOBAL STATE ─────────────────────────────────────────────────────────────
 const state = {
@@ -32,6 +42,7 @@ const state = {
   panY:           0,
   scale:          1,
   templates:      [],
+  rhythms:        [],
   solvedCount:    0,
   autoRestart:    true,
   selectedCubeId: null,
@@ -43,7 +54,6 @@ class CubeInstance {
     this.id          = id;
     this.state       = createSolvedState();
     this.solution    = [];
-    this.movesDone   = 0;
     this.schedulerId = null;
     this.paused      = false;
 
@@ -62,8 +72,8 @@ class CubeInstance {
       filterFreq:    800 + Math.random() * 3000,
       panning:       (Math.random() * 2 - 1) * 0.8,
       cubeVolume:    0,
-      rootSemitone:  0,   // 0=C, 2=D, 4=E, 5=F, 7=G, 9=A, 11=B
-      pauseAfterSolve: 1.5, // seconds of silence before next cycle
+      rootSemitone:  0,
+      randomPause:   true, // pick a random bar-aligned pause on each solve
     };
 
     this.chain = createAudioChain(this.config);
@@ -104,6 +114,10 @@ class CubeInstance {
 
   restartScheduler() {
     if (!state.playing) return;
+    // If the cube just solved and is waiting for the scheduleOnce to fire,
+    // don't create a new scheduler — the pending restart will pick up the
+    // new subdivision when _newCycle → _scheduleNext runs.
+    if (this.solution.length === 0 && this.schedulerId === null) return;
     this._clearSchedule();
     this._scheduleNext();
   }
@@ -118,16 +132,20 @@ class CubeInstance {
   _newCycle() {
     const moves   = scramble(this.state, 18 + Math.floor(Math.random() * 8));
     this.solution = buildSolution(moves);
-    this.movesDone = 0;
     this._scheduleNext();
+    // Show scrambled state immediately so the SVG doesn't flicker on the first tick
+    if (this.svgEl) updateCubeSVG(this.svgEl, this.state, `cube-${this.id}`);
   }
 
   _scheduleNext() {
     if (this.paused || !state.playing) return;
-    this._clearSchedule(); // guard against double-scheduling
+    this._clearSchedule();
+    // startTime=0 anchors this cube to the global Transport grid (same as the rhythm).
+    // Tone.js schedules the first callback at the next subdivision boundary from t=0,
+    // which is always phase-locked with any other startTime=0 scheduleRepeat.
     this.schedulerId = Tone.Transport.scheduleRepeat(time => {
       this._tick(time);
-    }, this.config.subdivision, Tone.Transport.now());
+    }, this.config.subdivision, 0);
   }
 
   _tick(time) {
@@ -143,12 +161,19 @@ class CubeInstance {
       if (counterEl) counterEl.textContent = state.solvedCount;
 
       if (state.autoRestart) {
-        const pauseMs = (this.config.pauseAfterSolve ?? 1.5) * 1000;
-        setTimeout(() => {
+        const pauseBars = this.config.randomPause
+          ? PAUSE_OPTIONS[Math.floor(Math.random() * PAUSE_OPTIONS.length)]
+          : 1;
+        const barSec  = Tone.Time('1m').toSeconds();
+        // Epsilon keeps restartAt strictly in the future even when pos lands on a bar boundary.
+        const pos     = Tone.Transport.seconds + 1e-6;
+        const nextBar = barSec > 0 ? Math.ceil(pos / barSec) * barSec : barSec;
+        const restartAt = nextBar + pauseBars * barSec;
+        Tone.Transport.scheduleOnce(() => {
           if (!this.paused && state.playing && this.schedulerId === null) {
             this._newCycle();
           }
-        }, pauseMs);
+        }, restartAt);
       }
       return;
     }
@@ -281,6 +306,7 @@ async function togglePlay() {
   if (!state.audioReady) {
     await Tone.start();
     initMasterBus();
+    initRhythmSynth();
     state.audioReady = true;
   }
 
@@ -291,6 +317,7 @@ async function togglePlay() {
   if (state.playing) {
     Tone.Transport.bpm.value = state.bpm;
     Tone.Transport.start();
+    startRhythm();
     btn.classList.add('playing');
     icon.textContent = '⏸';
     state.cubes.forEach(cube => {
@@ -299,6 +326,7 @@ async function togglePlay() {
     });
   } else {
     Tone.Transport.pause();
+    stopRhythm();
     btn.classList.remove('playing');
     icon.textContent = '▶';
     state.cubes.forEach(cube => {
@@ -310,7 +338,7 @@ async function togglePlay() {
 
 // ─── TRANSPORT CONTROLS ───────────────────────────────────────────────────────
 function syncBPM(val) {
-  state.bpm = Math.max(20, Math.min(300, parseInt(val) || 100));
+  state.bpm = parseInt(val) || 100;
   document.getElementById('input-bpm').value = state.bpm;
   if (state.playing) Tone.Transport.bpm.value = state.bpm;
 }
@@ -430,8 +458,13 @@ async function init() {
     if (res.ok) {
       const doc = jsyaml.load(await res.text());
       if (doc?.templates) state.templates = doc.templates;
+      if (doc?.rhythms)   state.rhythms   = doc.rhythms;
     }
   } catch { /* templates optional */ }
+
+  // Set Transport BPM immediately so any nodes created before first Play
+  // (e.g. FeedbackDelay converting '8n' to seconds) use the correct tempo.
+  Tone.Transport.bpm.value = state.bpm;
 
   renderLegend(document.getElementById('legend'), state.scaleType);
   setupPanZoom();
@@ -442,10 +475,24 @@ async function init() {
   // Add cube
   document.getElementById('btn-add').addEventListener('click', addCube);
 
-  // Sidebar toggle
-  document.getElementById('btn-sidebar').addEventListener('click', () => {
-    document.getElementById('sidebar').classList.toggle('closed');
-  });
+  // Sidebar toggle + mobile overlay
+  const sidebar        = document.getElementById('sidebar');
+  const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+  function openSidebar()  {
+    sidebar.classList.remove('closed');
+    sidebarOverlay.classList.add('active');
+  }
+  function closeSidebar() {
+    sidebar.classList.add('closed');
+    sidebarOverlay.classList.remove('active');
+  }
+  function toggleSidebar() {
+    sidebar.classList.contains('closed') ? openSidebar() : closeSidebar();
+  }
+
+  document.getElementById('btn-sidebar').addEventListener('click', toggleSidebar);
+  sidebarOverlay.addEventListener('click', closeSidebar);
 
   // BPM (live + commit)
   const bpmInput = document.getElementById('input-bpm');
@@ -461,11 +508,6 @@ async function init() {
   document.getElementById('select-scale').addEventListener('change', e => {
     state.scaleType = e.target.value;
     renderLegend(document.getElementById('legend'), state.scaleType);
-  });
-
-  // Scramble all
-  document.getElementById('btn-scramble-all').addEventListener('click', () => {
-    state.cubes.forEach(c => c.triggerScramble());
   });
 
   // Clear all
@@ -491,7 +533,95 @@ async function init() {
     if (e.target === e.currentTarget) e.currentTarget.classList.add('hidden');
   });
 
+  // ── Rhythm module ─────────────────────────────────────────────────────────
+  const swingSlider = document.getElementById('slider-swing');
+  swingSlider.addEventListener('input', e => {
+    setSwing(parseInt(e.target.value) / 100);
+    updateRangeGradient(e.target);
+    document.getElementById('select-rhythm').value = '';
+  });
+  updateRangeGradient(swingSlider);
+
+  const rhythmVolSlider = document.getElementById('slider-rhythm-vol');
+  rhythmVolSlider.addEventListener('input', e => {
+    setRhythmVolume(parseInt(e.target.value));
+    updateRangeGradient(e.target);
+  });
+  updateRangeGradient(rhythmVolSlider);
+
+  // Kit selector — populate from KITS object
+  const kitSelect = document.getElementById('select-kit');
+  Object.entries(KITS).forEach(([key, kit]) => {
+    const opt = document.createElement('option');
+    opt.value = key;
+    opt.textContent = kit.label;
+    kitSelect.appendChild(opt);
+  });
+  kitSelect.addEventListener('change', e => setRhythmKit(e.target.value));
+
+  // Populate rhythm dropdown from YAML
+  const rhythmSelect = document.getElementById('select-rhythm');
+  state.rhythms.forEach((r, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = r.name;
+    rhythmSelect.appendChild(opt);
+  });
+
+  rhythmSelect.addEventListener('change', e => {
+    const idx = e.target.value;
+    if (idx === '') return;
+    const preset = state.rhythms[parseInt(idx, 10)];
+    if (!preset) return;
+    loadRhythmPreset(preset);
+    // Sync swing slider to preset value
+    const swingPct = Math.round((preset.swing ?? 0) * 100);
+    swingSlider.value = swingPct;
+    updateRangeGradient(swingSlider);
+    initStepSequencer();
+  });
+
+  initStepSequencer();
+
+  // Animate current step highlight
+  (function animateSteps() {
+    const btns = document.querySelectorAll('.step-btn');
+    btns.forEach((btn, i) => {
+      btn.classList.toggle('step-current', state.playing && i === rhythm.currentStep);
+    });
+    requestAnimationFrame(animateSteps);
+  })();
+
   toggleEmptyState();
 }
 
+function initStepSequencer() {
+  const seq = document.getElementById('step-sequencer');
+  seq.innerHTML = '';
+  for (let i = 0; i < 16; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'step-btn';
+    applyStepClass(btn, rhythm.steps[i]);
+    btn.dataset.step = i;
+    btn.title = `Step ${i + 1}`;
+    btn.addEventListener('click', () => {
+      cycleStep(i);
+      applyStepClass(btn, rhythm.steps[i]);
+      document.getElementById('select-rhythm').value = '';
+    });
+    seq.appendChild(btn);
+  }
+}
+
+function applyStepClass(btn, val) {
+  btn.classList.remove('step-bombo', 'step-caja', 'step-hihat');
+  if (val) btn.classList.add(TIMBRE_CLASS[val]);
+}
+
 document.addEventListener('DOMContentLoaded', init);
+
+window.addEventListener('beforeunload', () => {
+  Tone.Transport.stop();
+  state.cubes.forEach(cube => cube.dispose());
+  Tone.getContext().dispose();
+});

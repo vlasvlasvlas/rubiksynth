@@ -34,7 +34,7 @@
 
           <div class="control-row">
             <label>BPM</label>
-            <input type="number" id="input-bpm" value="100" min="20" max="300">
+            <input type="number" id="input-bpm" value="100">
           </div>
 
           <div class="control-row">
@@ -45,19 +45,41 @@
 
         <div class="sidebar-section">
           <button id="btn-add" class="sidebar-btn highlight">+ Cubo</button>
-          <button id="btn-scramble-all" class="sidebar-btn">↺ Mezclar</button>
           <button id="btn-clear-all" class="sidebar-btn danger">✕ Limpiar</button>
 
           <div class="control-row" style="margin-top:12px">
             <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:var(--text-muted); font-size:0.82rem; font-weight:500">
               <input type="checkbox" id="check-autorestart" checked>
-              Auto-reiniciar
+              Loop
             </label>
           </div>
           <div class="control-row">
             <label style="color:var(--text-muted); font-size:0.82rem">Solucionados</label>
             <span id="solved-count" style="font-family:'JetBrains Mono',monospace; font-size:0.9rem">0</span>
           </div>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="section-title">Ritmo</div>
+          <div class="control-row">
+            <label>Preset</label>
+            <select id="select-rhythm" style="flex:1; margin-left:8px">
+              <option value="">(Personalizado)</option>
+            </select>
+          </div>
+          <div class="control-row">
+            <label>Kit</label>
+            <select id="select-kit" style="flex:1; margin-left:8px"></select>
+          </div>
+          <div class="control-row">
+            <label>Volumen</label>
+            <input type="range" id="slider-rhythm-vol" min="-40" max="0" value="-6">
+          </div>
+          <div class="control-row">
+            <label>Swing</label>
+            <input type="range" id="slider-swing" min="0" max="100" value="0">
+          </div>
+          <div id="step-sequencer"></div>
         </div>
 
         <div class="sidebar-section">
@@ -89,6 +111,8 @@
         <button id="btn-zoom-in" title="Zoom in">+</button>
         <button id="btn-zoom-out" title="Zoom out">−</button>
       </div>
+
+      <div id="sidebar-overlay"></div>
 
     </div>
 

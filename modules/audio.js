@@ -1,8 +1,11 @@
 /**
  * audio.js — Audio engine using Tone.js (global)
  *
- * Per-cube chain: Synth → Filter → FeedbackDelay → Reverb → Panner → Meter → Destination
- * Master bus: Compressor → Limiter → Destination
+ * Master bus (created at module load, before AudioContext starts):
+ *   HPF(40Hz) → Compressor → Limiter → Destination
+ *
+ * Per-cube chain:
+ *   Synth → Volume → Filter(LP) → FeedbackDelay → Reverb → Panner → MasterInput
  */
 
 export const SCALES = {
@@ -13,7 +16,6 @@ export const SCALES = {
   wholetone:  [0, 2, 4, 6, 8, 10],
 };
 
-// 6 colors map to 6 scale degrees
 const COLOR_DEGREE = [0, 1, 2, 3, 4, 5];
 
 export const ROOT_NOTES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -22,33 +24,52 @@ export function colorToNote(colorIdx, baseOctave = 4, scaleType = 'pentatonic', 
   const scale    = SCALES[scaleType] || SCALES.pentatonic;
   const degree   = COLOR_DEGREE[colorIdx % COLOR_DEGREE.length] % scale.length;
   const semitone = scale[degree];
-  const midi = 60 + (baseOctave - 4) * 12 + semitone + rootSemitone;
+  const midi     = 60 + (baseOctave - 4) * 12 + semitone + rootSemitone;
   return Tone.Frequency(midi, 'midi').toNote();
 }
 
 // ─── MASTER BUS ───────────────────────────────────────────────────────────────
-// Volume limiting via Tone.Destination (safe — doesn't break the audio graph)
+// Created at module load so every chain created later feeds into it.
+// Tone.js defers AudioContext start until Tone.start(), so creating nodes here is safe.
+const _hpf  = new Tone.Filter(40, 'highpass');  // cut sub-bass mud
+const _comp = new Tone.Compressor({
+  threshold: -24,   // dBFS — gentle threshold, more headroom
+  ratio:      3,    // 3:1 — transparent, not crushing
+  attack:    0.005, // 5 ms
+  release:   0.35,  // 350 ms
+  knee:      12,    // wide soft knee — smooth onset
+});
+const _lim = new Tone.Limiter(-1); // hard ceiling at -1 dBFS
+
+_hpf.connect(_comp);
+_comp.connect(_lim);
+_lim.toDestination();
+
+/** Returns the input node of the master bus chain. Route all audio here. */
+export function getMasterInput() { return _hpf; }
+
 export function initMasterBus() {
-  Tone.Destination.volume.value = -3; // -3 dB headroom
+  // Master volume: 0 dB — dynamics handled by compressor
+  Tone.Destination.volume.value = 0;
 }
 
 // ─── PER-CUBE CHAIN ───────────────────────────────────────────────────────────
 export function createAudioChain(config = {}) {
   const {
-    synthType      = 'Synth',
-    attack         = 0.02,
-    decay          = 0.1,
-    sustain        = 0.3,
-    release        = 0.5,
-    reverbWet      = 0.25,
-    delayTime      = '8n',
-    delayFeedback  = 0.2,
-    filterFreq     = 2000,
-    panning        = 0,
-    cubeVolume     = 0,
-    oscillatorType = 'triangle',
-    modulationIndex= 6,
-    harmonicity    = 2,
+    synthType       = 'Synth',
+    attack          = 0.02,
+    decay           = 0.1,
+    sustain         = 0.3,
+    release         = 0.5,
+    reverbWet       = 0.25,
+    delayTime       = '8n',
+    delayFeedback   = 0.2,
+    filterFreq      = 2000,
+    panning         = 0,
+    cubeVolume      = 0,
+    oscillatorType  = 'triangle',
+    modulationIndex = 6,
+    harmonicity     = 2,
   } = config;
 
   const synth  = makeSynth(synthType, { attack, decay, sustain, release, oscillatorType, modulationIndex, harmonicity });
@@ -57,14 +78,12 @@ export function createAudioChain(config = {}) {
   const delay  = new Tone.FeedbackDelay(delayTime, delayFeedback);
   const reverb = new Tone.Reverb({ decay: 2.5, wet: reverbWet });
   const panner = new Tone.Panner(panning);
-  const meter  = new Tone.Meter({ smoothing: 0.88 });
 
   reverb.generate();
 
-  synth.chain(vol, filter, delay, reverb, panner, Tone.Destination);
-  panner.connect(meter);
+  synth.chain(vol, filter, delay, reverb, panner, getMasterInput());
 
-  return { synth, vol, filter, delay, reverb, panner, meter, synthType };
+  return { synth, vol, filter, delay, reverb, panner, synthType };
 }
 
 function makeSynth(type, { attack, decay, sustain, release, oscillatorType, modulationIndex, harmonicity }) {
@@ -78,13 +97,12 @@ function makeSynth(type, { attack, decay, sustain, release, oscillatorType, modu
       return new Tone.MonoSynth({ envelope: env, oscillator: { type: oscillatorType } });
     case 'PluckSynth':
       return new Tone.PluckSynth({ attackNoise: 1, dampening: 3800, resonance: 0.7 });
-    default: // 'Synth'
+    default:
       return new Tone.Synth({ oscillator: { type: oscillatorType }, envelope: env });
   }
 }
 
 // ─── TRIGGER NOTE (sample-accurate) ──────────────────────────────────────────
-// time: Web Audio context time from Transport.scheduleRepeat callback
 export function triggerNote(chain, colorIdx, direction, config, time) {
   const {
     baseOctave   = 4,
@@ -97,8 +115,7 @@ export function triggerNote(chain, colorIdx, direction, config, time) {
   const note   = colorToNote(colorIdx, octave, scaleType, rootSemitone);
   const dur    = direction === 'double' ? '2n' : subdivision;
   const vel    = direction === 'double' ? 0.85 : 0.65 + Math.random() * 0.1;
-
-  const t = time ?? Tone.now();
+  const t      = time ?? Tone.now();
 
   if (chain.synthType === 'PluckSynth') {
     chain.synth.triggerAttack(note, t);
@@ -111,7 +128,6 @@ export function triggerNote(chain, colorIdx, direction, config, time) {
 export function setCubeVolume(chain, db) {
   if (chain.vol) chain.vol.volume.value = Math.max(-40, Math.min(6, db));
 }
-
 export function setReverb(chain, wet) {
   if (chain.reverb) chain.reverb.wet.value = Math.max(0, Math.min(1, wet));
 }
@@ -153,13 +169,6 @@ export function updateEnvelope(chain, config) {
   }
 }
 
-// ─── VU LEVEL (0–1) ──────────────────────────────────────────────────────────
-export function getLevel(chain) {
-  if (!chain.meter) return 0;
-  const v = chain.meter.getValue();
-  return typeof v === 'number' ? Math.max(0, (v + 60) / 60) : 0;
-}
-
 // ─── DISPOSE ─────────────────────────────────────────────────────────────────
 export function disposeChain(chain) {
   chain.synth?.dispose();
@@ -168,5 +177,4 @@ export function disposeChain(chain) {
   chain.delay?.dispose();
   chain.reverb?.dispose();
   chain.panner?.dispose();
-  chain.meter?.dispose();
 }
