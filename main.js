@@ -12,13 +12,13 @@ import {
 
 import {
   createAudioChain, initMasterBus, triggerNote,
-  disposeChain, setDelayTime, setCubeVolume,
+  disposeChain, setDelayTime, setMasterVolume,
 } from './modules/audio.js';
 
 import {
   rhythm, startRhythm, stopRhythm, setSwing,
   loadRhythmPreset, cycleStep, TIMBRE_CLASS,
-  initRhythmSynth, setRhythmVolume, setRhythmKit, setRhythmMute, KITS,
+  initRhythmSynth, setRhythmKit, setRhythmMute, KITS,
 } from './modules/rhythm.js';
 
 import {
@@ -70,12 +70,10 @@ class CubeInstance {
       decay:         0.1,
       sustain:       0.3,
       release:       0.5,
-      reverbWet:     Math.random() * 0.4,
+      reverbWet:     Math.random() * 0.18,
       delayTime:     ['8n','8n','4n','16n'][Math.floor(Math.random() * 4)],
-      delayFeedback: Math.random() * 0.35,
+      delayFeedback: Math.random() * 0.16,
       filterFreq:    800 + Math.random() * 3000,
-      panning:       (Math.random() * 2 - 1) * 0.8,
-      cubeVolume:    0,
       rootSemitone:  0,
       randomPause:   true, // pick a random bar-aligned pause on each solve
     };
@@ -197,6 +195,7 @@ class CubeInstance {
         scaleType:    this.getScale(),
         subdivision:  this.config.subdivision,
         rootSemitone: this.config.rootSemitone ?? 0,
+        oscillatorType: this.config.oscillatorType,
       }, time);
     } catch (e) {
       console.warn('triggerNote error:', e);
@@ -306,11 +305,7 @@ function renderMixer() {
         <button class="mixer-btn mute ${isMuted ? 'active' : ''}" title="Mute">M</button>
         <button class="mixer-btn solo ${isSolo  ? 'active' : ''}" title="Solo">S</button>
       </div>
-      <input type="range" class="mixer-vol" min="-40" max="6" value="${cube.config.cubeVolume ?? 0}">
     `;
-
-    const volSlider = ch.querySelector('.mixer-vol');
-    updateRangeGradient(volSlider);
 
     const focusFn = () => focusCubeOnCanvas(cube);
     ch.querySelector('.mixer-dot').addEventListener('click', focusFn);
@@ -326,12 +321,6 @@ function renderMixer() {
       toggleCubeSolo(cube.id);
       renderMixer();
     });
-    volSlider.addEventListener('input', e => {
-      cube.config.cubeVolume = parseInt(e.target.value);
-      setCubeVolume(cube.chain, cube.config.cubeVolume);
-      updateRangeGradient(e.target);
-    });
-
     channels.appendChild(ch);
   });
 
@@ -345,10 +334,7 @@ function renderMixer() {
       <button class="mixer-btn mute ${state.rhythmMuted ? 'active' : ''}" id="mixer-r-mute" title="Mute ritmo">M</button>
       <button class="mixer-btn solo ${state.rhythmSoloed ? 'active' : ''}" id="mixer-r-solo" title="Solo ritmo">S</button>
     </div>
-    <input type="range" class="mixer-vol" id="mixer-r-vol" min="-40" max="0" value="${rhythm.volume}">
   `;
-  const rVol = rch.querySelector('#mixer-r-vol');
-  updateRangeGradient(rVol);
   rch.querySelector('#mixer-r-mute').addEventListener('click', e => {
     e.stopPropagation();
     state.rhythmMuted = !state.rhythmMuted;
@@ -359,10 +345,6 @@ function renderMixer() {
     e.stopPropagation();
     toggleRhythmSolo();
     renderMixer();
-  });
-  rVol.addEventListener('input', e => {
-    setRhythmVolume(parseInt(e.target.value));
-    updateRangeGradient(e.target);
   });
   channels.appendChild(rch);
 }
@@ -498,8 +480,10 @@ function syncBPM(val) {
 }
 
 function syncVolume(val) {
-  state.volume = Math.max(0, Math.min(100, parseInt(val) || 75));
-  Tone.Destination.volume.value = Tone.gainToDb(state.volume / 100);
+  const parsed = parseInt(val, 10);
+  state.volume = Number.isFinite(parsed) ? Math.max(0, Math.min(100, parsed)) : 75;
+  state.volume = setMasterVolume(state.volume);
+  document.getElementById('slider-vol').value = state.volume;
   updateRangeGradient(document.getElementById('slider-vol'));
 }
 
@@ -653,7 +637,7 @@ async function init() {
   bpmInput.addEventListener('input',  e => syncBPM(e.target.value));
   bpmInput.addEventListener('change', e => syncBPM(e.target.value));
 
-  // Volume
+  // Master
   const volSlider = document.getElementById('slider-vol');
   volSlider.addEventListener('input', e => syncVolume(e.target.value));
   updateRangeGradient(volSlider);
@@ -698,13 +682,6 @@ async function init() {
     document.getElementById('select-rhythm').value = '';
   });
   updateRangeGradient(swingSlider);
-
-  const rhythmVolSlider = document.getElementById('slider-rhythm-vol');
-  rhythmVolSlider.addEventListener('input', e => {
-    setRhythmVolume(parseInt(e.target.value));
-    updateRangeGradient(e.target);
-  });
-  updateRangeGradient(rhythmVolSlider);
 
   // Kit selector — populate from KITS object
   const kitSelect = document.getElementById('select-kit');

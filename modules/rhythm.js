@@ -11,11 +11,13 @@
 
 import { getMasterInput } from './audio.js';
 
+const FIXED_RHYTHM_DB = -12;
+
 export const rhythm = {
   steps:       Array(16).fill(''), // '' | 'bombo' | 'caja' | 'hihat'
   currentStep: -1,
   schedulerId: null,
-  volume:      -6,
+  volume:      FIXED_RHYTHM_DB,
   kit:         '808',
   muted:       false,
 };
@@ -92,7 +94,7 @@ function buildSynths(kitName) {
 export function initRhythmSynth() {
   disposeRhythmSynth();
   const { bombo, caja, hihat } = buildSynths(rhythm.kit);
-  const vol = new Tone.Volume(rhythm.volume);
+  const vol = new Tone.Volume(FIXED_RHYTHM_DB);
 
   // Route through the same master bus as cubes (Compressor → Limiter → Destination)
   bombo.connect(vol);
@@ -143,9 +145,9 @@ export function startRhythm() {
     const t = rhythm.steps[rhythm.currentStep];
     if (!t || !_synths) return;
     const note = (KITS[rhythm.kit] || KITS['808']).bombo.note;
-    if      (t === 'bombo') _synths.bombo.triggerAttackRelease(note, '16n', time);
-    else if (t === 'caja')  _synths.caja.triggerAttackRelease('16n', time);
-    else if (t === 'hihat') _synths.hihat.triggerAttackRelease('16n', time);
+    if      (t === 'bombo') _synths.bombo.triggerAttackRelease(note, '16n', time, 0.55);
+    else if (t === 'caja')  _synths.caja.triggerAttackRelease('16n', time, 0.42);
+    else if (t === 'hihat') _synths.hihat.triggerAttackRelease('16n', time, 0.3);
   }, '16n', 0);
 }
 
@@ -161,11 +163,6 @@ export function stopRhythm() {
 export function setSwing(amount) {
   Tone.Transport.swing = amount;
   Tone.Transport.swingSubdivision = '16n';
-}
-
-export function setRhythmVolume(db) {
-  rhythm.volume = db;
-  if (_synths?.vol) _synths.vol.volume.value = db;
 }
 
 export function setRhythmMute(muted) {

@@ -4,7 +4,7 @@
 import { COLOR_CSS, COLOR_NAME } from './cube.js';
 import {
   setReverb, setDelayTime, setDelayFeedback,
-  setFilterFreq, setPanning, setCubeVolume,
+  setFilterFreq,
   replaceSynth, updateEnvelope, ROOT_NOTES,
 } from './audio.js';
 
@@ -127,26 +127,10 @@ export function renderSidebarParams(cube, templates, onDelete, onScramble) {
       <input type="range" id="insp-r" min="10" max="500" value="${Math.round(cfg.release * 100)}">
     </div>
 
-    <div class="insp-section-label" style="margin-top:14px">FX</div>
-    <div class="inspector-row">
-      <span class="inspector-label">Volume</span>
-      <input type="range" id="insp-vol" min="-40" max="6" value="${cfg.cubeVolume ?? 0}">
-    </div>
-    <div class="inspector-row">
-      <span class="inspector-label">Reverb</span>
-      <input type="range" id="insp-reverb" min="0" max="100" value="${Math.round(cfg.reverbWet * 100)}">
-    </div>
-    <div class="inspector-row">
-      <span class="inspector-label">Delay</span>
-      <input type="range" id="insp-delay-fb" min="0" max="85" value="${Math.round(cfg.delayFeedback * 100)}">
-    </div>
+    <div class="insp-section-label" style="margin-top:14px">Timbre</div>
     <div class="inspector-row">
       <span class="inspector-label">Filter</span>
       <input type="range" id="insp-filter" min="100" max="8000" value="${cfg.filterFreq}">
-    </div>
-    <div class="inspector-row">
-      <span class="inspector-label">Pan</span>
-      <input type="range" id="insp-pan" min="-100" max="100" value="${Math.round(cfg.panning * 100)}">
     </div>
 
     <div class="action-row">
@@ -168,8 +152,7 @@ export function renderSidebarParams(cube, templates, onDelete, onScramble) {
   const TIMBRE_KEYS = [
     'synthType','oscillatorType','modulationIndex','harmonicity',
     'attack','decay','sustain','release',
-    'reverbWet','delayTime','delayFeedback','filterFreq',
-    'panning','cubeVolume',
+    'delayTime','filterFreq',
   ];
 
   body.querySelector('#insp-template').addEventListener('change', e => {
@@ -189,9 +172,6 @@ export function renderSidebarParams(cube, templates, onDelete, onScramble) {
     body.querySelector('#insp-d').value           = Math.round(cfg.decay * 100);
     body.querySelector('#insp-s').value           = Math.round(cfg.sustain * 100);
     body.querySelector('#insp-r').value           = Math.round(cfg.release * 100);
-    body.querySelector('#insp-vol').value         = cfg.cubeVolume ?? 0;
-    body.querySelector('#insp-reverb').value      = Math.round(cfg.reverbWet * 100);
-    body.querySelector('#insp-delay-fb').value    = Math.round(cfg.delayFeedback * 100);
     body.querySelector('#insp-filter').value      = cfg.filterFreq;
     body.querySelectorAll('input[type=range]').forEach(updateRangeGradient);
     e.target.value = idx;
@@ -249,30 +229,10 @@ export function renderSidebarParams(cube, templates, onDelete, onScramble) {
     el.addEventListener('input', e => { updateRangeGradient(e.target); syncADSR(); });
   });
 
-  // ── FX ────────────────────────────────────────────────────────────────────
-  body.querySelector('#insp-vol').addEventListener('input', e => {
-    cfg.cubeVolume = parseInt(e.target.value);
-    setCubeVolume(cube.chain, cfg.cubeVolume);
-    updateRangeGradient(e.target); markCustom();
-  });
-  body.querySelector('#insp-reverb').addEventListener('input', e => {
-    cfg.reverbWet = parseInt(e.target.value) / 100;
-    setReverb(cube.chain, cfg.reverbWet);
-    updateRangeGradient(e.target); markCustom();
-  });
-  body.querySelector('#insp-delay-fb').addEventListener('input', e => {
-    cfg.delayFeedback = parseInt(e.target.value) / 100;
-    setDelayFeedback(cube.chain, cfg.delayFeedback);
-    updateRangeGradient(e.target); markCustom();
-  });
+  // ── Timbre ────────────────────────────────────────────────────────────────
   body.querySelector('#insp-filter').addEventListener('input', e => {
     cfg.filterFreq = parseInt(e.target.value);
     setFilterFreq(cube.chain, cfg.filterFreq);
-    updateRangeGradient(e.target); markCustom();
-  });
-  body.querySelector('#insp-pan').addEventListener('input', e => {
-    cfg.panning = parseInt(e.target.value) / 100;
-    setPanning(cube.chain, cfg.panning);
     updateRangeGradient(e.target); markCustom();
   });
 

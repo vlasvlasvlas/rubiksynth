@@ -1,6 +1,6 @@
 # RubikSynth
 
-Cubos de Rubik 2D que se resuelven solos generando música en tiempo real. Cada color es una nota, cada giro es un sonido. Síntesis, efectos, escala y ritmo configurables por cubo.
+Cubos de Rubik 2D que se resuelven solos generando música en tiempo real. Cada color es una nota, cada giro es un sonido. Síntesis, escala y ritmo configurables con salida mono y un único nivel maestro.
 
 **Demo** → [vlasvlasvlas.github.io/rubiksynth](https://vlasvlasvlas.github.io/rubiksynth)
 
@@ -23,7 +23,7 @@ python3 -m http.server 8080
 |---|---|
 | **▶ / ⏸** | Iniciar o pausar todos los cubos y el ritmo |
 | **BPM** | Tempo global — sin límite, afecta cubos y ritmo |
-| **Vol** | Volumen maestro |
+| **Master** | Volumen maestro único |
 | **Loop** | Si está activo, los cubos reinician automáticamente al resolver. Si se desactiva, cada cubo resuelve una vez y se detiene. |
 | **+ Cubo** | Agrega un cubo con síntesis aleatoria |
 | **✕ Limpiar** | Elimina todos los cubos |
@@ -68,9 +68,9 @@ Aplica un template de síntesis predefinido. **Solo afecta el timbre** — no mo
 | **Raíz** | Nota raíz de la escala (C, C#, D…) |
 | **Grid** | Subdivisión rítmica: 1/32, 1/16, 1/8, 1/4, 1/2 |
 
-### Envelope (ADSR), FX
+### Envelope (ADSR), Timbre
 
-Attack, Decay, Sustain, Release, Volume, Reverb, Delay, Filter, Pan — ajustables en vivo.
+Attack, Decay, Sustain, Release y Filter son ajustables en vivo. No hay volumen continuo por cubo; el nivel sale por el `Master`.
 
 ---
 
@@ -84,7 +84,6 @@ El secuenciador de 16 pasos corre en sincronía con los cubos. Todos comparten e
 |---|---|
 | **Preset** | Carga un patrón rítmico predefinido desde `templates.yaml` |
 | **Kit** | Cambia el timbre de batería: TR-808, TR-909, Lo-fi, Electro, Chiptune |
-| **Volumen** | Volumen del ritmo independiente del master |
 | **Swing** | Desplaza los tiempos impares del grid de 16ths |
 
 ### Paso a paso
@@ -105,16 +104,18 @@ Hacé click en cada casilla del secuenciador para ciclar el sonido asignado:
 ### Master bus (global)
 
 ```
-HPF 40 Hz → Compressor (−24 dB, 3:1) → Limiter (−1 dBFS) → Destination
+HPF 40 Hz → Master Gain → Compressor → Limiter → Mono → Destination
 ```
 
-El filtro pasa-altos elimina sub-bajos, el compresor controla la dinámica sin aplastar, el limiter es el techo duro. Se crea una sola vez al cargar el módulo — todos los cubos y el ritmo pasan por él.
+El filtro pasa-altos elimina sub-bajos, el compresor controla la dinámica, el limiter es el techo duro y la salida final se fuerza a mono. Se crea una sola vez al cargar el módulo; todos los cubos y el ritmo pasan por él.
 
 ### Cadena por cubo
 
 ```
-Synth → Volume → Filter (LP) → FeedbackDelay → Reverb → Panner → Master bus
+Synth → Fixed gate → Filter (LP) → FeedbackDelay/Reverb acotados → Master bus
 ```
+
+Los cubos y el ritmo solo tienen mute/solo binario. No hay volumen por cubo, volumen del ritmo ni pan por objeto.
 
 ### Sincronización
 
@@ -140,12 +141,10 @@ templates:
       decay: 0.1
       sustain: 0.3
       release: 0.5
-      cubeVolume: 0               # dB  -40–+6
-      reverbWet: 0.25             # 0.0–1.0
+      reverbWet: 0.25             # 0.0–0.32
       delayTime: "8n"             # 32n | 16n | 8n | 4n | 2n
-      delayFeedback: 0.2          # 0.0–0.85
+      delayFeedback: 0.2          # 0.0–0.28
       filterFreq: 2000            # Hz  100–8000
-      panning: 0.0                # -1.0 izq → 0 centro → 1.0 der
 ```
 
 > Los campos `subdivision`, `scaleOverride`, `baseOctave`, `rootSemitone` no se aplican desde el template — se preservan los valores que el usuario ya tenía en el cubo.

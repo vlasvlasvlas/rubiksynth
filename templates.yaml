@@ -130,12 +130,10 @@ templates:
       decay: 1.5
       sustain: 0.8
       release: 3.0
-      cubeVolume: 0
-      reverbWet: 0.85
+      reverbWet: 0.32
       delayTime: "2n"
-      delayFeedback: 0.4
+      delayFeedback: 0.28
       filterFreq: 1200
-      panning: 0.0
 
   - name: "Theremin"
     config:
@@ -148,12 +146,10 @@ templates:
       decay: 0.2
       sustain: 1.0
       release: 1.5
-      cubeVolume: -3
-      reverbWet: 0.5
+      reverbWet: 0.32
       delayTime: "8n"
-      delayFeedback: 0.3
+      delayFeedback: 0.28
       filterFreq: 2000
-      panning: 0.0
 
   - name: "Space Lady"
     config:
@@ -166,14 +162,12 @@ templates:
       decay: 0.3
       sustain: 0.4
       release: 0.8
-      cubeVolume: -2
-      reverbWet: 0.6
+      reverbWet: 0.32
       delayTime: "8n"
-      delayFeedback: 0.5
+      delayFeedback: 0.28
       filterFreq: 2500
       modulationIndex: 8
       harmonicity: 2
-      panning: 0.0
 
   # ── PLUCKS & STRINGS ────────────────────────────────────────────────────────
 
@@ -188,12 +182,10 @@ templates:
       decay: 0.2
       sustain: 0.1
       release: 1.5
-      cubeVolume: 0
-      reverbWet: 0.4
+      reverbWet: 0.32
       delayTime: "4n"
-      delayFeedback: 0.3
+      delayFeedback: 0.28
       filterFreq: 4000
-      panning: 0.0
 
   - name: "Rhodes"
     config:
@@ -206,13 +198,11 @@ templates:
       decay: 1.0
       sustain: 0.2
       release: 2.0
-      cubeVolume: 0
       reverbWet: 0.3
       delayTime: "4n"
       delayFeedback: 0.2
       filterFreq: 3000
       harmonicity: 3
-      panning: 0.0
 
   # ── ELECTRONIC / RHYTHMIC ───────────────────────────────────────────────────
 
@@ -227,12 +217,10 @@ templates:
       decay: 0.08
       sustain: 0.15
       release: 0.1
-      cubeVolume: -4
       reverbWet: 0.05
       delayTime: "8n"
       delayFeedback: 0.1
       filterFreq: 8000
-      panning: 0.0
 
   - name: "Daft Punk"
     config:
@@ -245,14 +233,12 @@ templates:
       decay: 0.4
       sustain: 0.5
       release: 0.6
-      cubeVolume: -3
       reverbWet: 0.3
       delayTime: "8n"
       delayFeedback: 0.2
       filterFreq: 3000
       modulationIndex: 10
       harmonicity: 3
-      panning: 0.0
 
   - name: "Moroder"
     config:
@@ -265,12 +251,10 @@ templates:
       decay: 0.1
       sustain: 0.0
       release: 0.2
-      cubeVolume: -2
       reverbWet: 0.1
       delayTime: "16n"
       delayFeedback: 0.2
       filterFreq: 5000
-      panning: 0.0
 
   # ── ANALOG / WARM ───────────────────────────────────────────────────────────
 
@@ -285,12 +269,10 @@ templates:
       decay: 0.5
       sustain: 0.6
       release: 1.2
-      cubeVolume: 0
       reverbWet: 0.15
       delayTime: "4n"
       delayFeedback: 0.1
       filterFreq: 1500
-      panning: 0.0
 
   - name: "Glass Arp"
     config:
@@ -303,12 +285,10 @@ templates:
       decay: 0.15
       sustain: 0.0
       release: 0.4
-      cubeVolume: -2
-      reverbWet: 0.55
+      reverbWet: 0.32
       delayTime: "8n"
-      delayFeedback: 0.45
+      delayFeedback: 0.28
       filterFreq: 6000
-      panning: 0.0
 
   - name: "Ambient Wash"
     config:
@@ -321,11 +301,9 @@ templates:
       decay: 2.0
       sustain: 0.6
       release: 4.0
-      cubeVolume: -6
-      reverbWet: 0.9
+      reverbWet: 0.32
       delayTime: "4n"
-      delayFeedback: 0.6
+      delayFeedback: 0.28
       filterFreq: 800
       modulationIndex: 3
       harmonicity: 1.5
-      panning: 0.0
